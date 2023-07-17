@@ -1,0 +1,526 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+}
+
+*[hidden] {
+  display: none !important;
+}
+
+b {
+  font-weight: bold;
+}
+
+i {
+  font-style: italic;
+}
+
+u {
+  text-decoration: underline;
+}
+
+a {
+  color: #26f;
+}
+
+body {
+  font-family: "Varela Round", sans-serif;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overscroll-behavior: contain;
+  /* Prevent accidental pull-to-refresh */
+  overflow-x: hidden;
+}
+
+.loading.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  color: #000;
+}
+
+.loading.page>div {
+  opacity: 0.3;
+}
+
+/* Layout */
+p:not(:last-child),
+ul:not(:last-child) {
+  margin-bottom: 1em;
+}
+
+.section {
+  padding: 1em;
+}
+
+.section header {
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+}
+
+.concealed {
+  visibility: hidden;
+}
+
+/* Boxes */
+.box {
+  position: relative;
+  padding: 1em;
+  background: #eee;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.05), 0 0.2em 0.3em rgba(0, 0, 0, 0.05), 0 0 0.2em inset rgba(255, 255, 255, 0.5);
+  border-radius: 0.25em;
+}
+
+.box:before {
+  pointer-events: none;
+  content: " ";
+  position: absolute;
+  z-index: 1;
+  top: 0.2em;
+  left: 0.2em;
+  right: 0.2em;
+  bottom: 0.2em;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+}
+
+.box:not(:last-child) {
+  margin-bottom: 1em;
+}
+
+.box header {
+  font-family: "Lato", sans-serif;
+  text-transform: uppercase;
+  color: #164158;
+  margin-bottom: 1em;
+  font-weight: bold;
+}
+
+/* Forms */
+fieldset {
+  border: none;
+  display: block;
+}
+
+/* Hide Chrome's autofill background since it looks bad */
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 2em #fff inset;
+}
+
+input:-webkit-autofill:disabled {
+  box-shadow: 0 0 0px 2em #f5f5f5 inset;
+}
+
+input.styled,
+input.styled:disabled,
+textarea.styled,
+select.styled {
+  padding: 0.4em;
+  border-radius: 0.2em;
+  background: #fff;
+  border: 1px solid #bbb;
+  color: #222;
+}
+
+input.styled {
+  box-shadow: 0 2px rgba(32, 32, 32, 0.05) inset;
+}
+
+input.styled:disabled {
+  background: #f5f5f5;
+}
+
+input.styled[type=radio] {
+  display: none;
+}
+
+input.styled[type=radio]+label:first-of-type {
+  border-right: 0;
+  border-radius: 2em 0 0 2em;
+  padding-left: 1em;
+  padding-right: 0.6em;
+}
+
+input.styled[type=radio]+label:last-of-type {
+  border-radius: 0 2em 2em 0;
+  padding-left: 0.6em;
+  padding-right: 1em;
+}
+
+button {
+  user-select: none;
+  cursor: pointer;
+  outline: none;
+}
+
+button.styled,
+input.styled[type=radio]+label {
+  padding: 0.4em 0.8em;
+  color: #fff;
+  font-weight: bold;
+  background: #26aa36;
+  border: none;
+  border-radius: 2em;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0.2em 0 rgba(0, 0, 0, 0.1), 0 2px 0 0 rgba(0, 0, 0, 0.1);
+  user-select: none;
+  cursor: pointer;
+  outline: none;
+}
+
+input.styled[type=checkbox] {
+  display: none;
+}
+
+input.styled[type=checkbox]:not(:checked)+label:before {
+  content: "☐ ";
+  font-weight: bold;
+}
+
+input.styled[type=checkbox]:checked+label:before {
+  content: "☑ ";
+  font-weight: bold;
+}
+
+input.styled[type=checkbox]+label {
+  display: inline-block;
+  background: #ddd;
+  padding: 0.4em;
+  border-radius: 0.5em;
+  user-select: none;
+  cursor: pointer;
+}
+
+input.styled[type=checkbox].dark+label {
+  background: rgba(0, 0, 0, 0.5);
+  color: #eee;
+}
+
+.small {
+  font-size: smaller;
+}
+
+button.styled.blue,
+input.styled[type=radio]+label {
+  background: #3ba3ff;
+}
+
+button.styled.red {
+  background: #ff5a5a;
+}
+
+input.styled[type=radio]:checked+label {
+  border-top: 2px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 0;
+  background: #2383d8;
+  box-shadow: none;
+}
+
+button.styled:not(:disabled):hover,
+button.styled:not(:disabled):focus {
+  background: #3dbd31;
+}
+
+button.styled.blue:not(:disabled):hover,
+button.styled.blue:not(:disabled):focus,
+input.styled[type=radio]:not(:checked)+label:hover {
+  background: #63b6ff;
+}
+
+button.styled.red:not(:disabled):hover,
+button.styled.red:not(:disabled):focus {
+  background: #ff7474;
+}
+
+button.styled:not(:disabled):active,
+input.styled[type=radio]:active+label {
+  border-top: 2px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+button.styled:disabled,
+button.styled.blue:disabled,
+button.styled.red:disabled {
+  background: #a8a8a8;
+  cursor: default;
+}
+
+/* Tables */
+table.styled {
+  border-collapse: collapse;
+}
+
+table.styled th,
+table.styled td {
+  vertical-align: top;
+  padding: 1em;
+  border: 1px solid #ccc;
+}
+
+@media (min-width: 1000px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 999px) {
+  .largeScreen {
+    display: none;
+  }
+}
+
+/* Scrollbars */
+.darkScrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) rgba(0, 0, 0, 0.05);
+}
+
+.darkScrollbar::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+}
+
+.darkScrollbar::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.darkScrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.darkScrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.darkScrollbar::-webkit-scrollbar-corner {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.lightScrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.05) rgba(0, 0, 0, 0.05);
+}
+
+.lightScrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.lightScrollbar::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.lightScrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.05);
+  background-clip: content-box;
+}
+
+.lightScrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.lightScrollbar::-webkit-scrollbar-corner {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark settings */
+.darkSettings {
+  background: #161515;
+  color: #aaa;
+  overflow-y: auto;
+  text-align: left;
+  font-size: smaller;
+}
+
+.darkSettings .setting {
+  margin-bottom: 1em;
+}
+
+.darkSettings .setting .label {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5em;
+}
+
+.darkSettings .setting .info {
+  font-style: italic;
+  color: #999;
+  padding: 0 0.5em;
+  margin-top: 1em;
+}
+
+.darkSettings .field {
+  padding: 0 0.5em;
+  margin-top: 1em;
+}
+
+
+.darkSettings input,
+.darkSettings input:disabled,
+.darkSettings textarea,
+.darkSettings select {
+  padding: 0.4em;
+  border-radius: 0.2em;
+  background: #202020;
+  border: 1px solid #333;
+  color: #eee;
+  width: 100%;
+}
+
+.darkSettings .range {
+  display: flex;
+}
+
+.darkSettings .range select {
+  width: auto;
+  margin-right: 0.5em;
+}
+
+.darkSettings .range input[type=number] {
+  width: 5em;
+  margin-right: 0.5em;
+  -moz-appearance: textfield;
+}
+
+.darkSettings .range input[type=number]::-webkit-outer-spin-button,
+.darkSettings .range input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.darkSettings .range input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.darkSettings .range input[type=range] {
+  flex: 1;
+}
+
+.darkSettings .range input[type=range] {
+  background: transparent;
+  border: none;
+}
+
+.darkSettings .range input[type=range]::-webkit-slider-runnable-track {
+  background: #333;
+  height: 0.5em;
+  border-radius: 1em;
+}
+
+.darkSettings .range input[type=range]::-moz-range-track {
+  background: #333;
+  height: 0.5em;
+  border-radius: 1em;
+}
+
+.darkSettings .range input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  background: #666;
+  margin-top: -0.25em;
+  width: 1em;
+  height: 1em;
+  border: 1px solid #888;
+  border-radius: 1em;
+}
+
+.darkSettings .range input[type=range]::-moz-range-thumb {
+  -webkit-appearance: none;
+  background: #666;
+  margin-top: -0.25em;
+  width: 1em;
+  height: 1em;
+  border: 1px solid #888;
+  border-radius: 1em;
+}
+
+.darkSettings input[type=radio] {
+  display: none;
+}
+
+.darkSettings input[type=radio]+label:first-of-type {
+  border-right: 0;
+  border-radius: 2em 0 0 2em;
+  padding-left: 1em;
+  padding-right: 0.6em;
+}
+
+.darkSettings input[type=radio]+label:last-of-type {
+  border-radius: 0 2em 2em 0;
+  padding-left: 0.6em;
+  padding-right: 1em;
+}
+
+.darkSettings .radio label {
+  padding: 0.4em 0.8em;
+  color: #888;
+  background: #111;
+  font-weight: bold;
+  border: 1px solid #333;
+  border-radius: 2em;
+  background: transparent;
+  user-select: none;
+  cursor: pointer;
+}
+
+.darkSettings .radio input[type=radio]:checked+label {
+  color: #fff;
+  background: #222;
+}
+
+.darkSettings table {
+  width: 100%;
+}
+
+.darkSettings th,
+.darkSettings td {
+  border: none;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.darkSettings th {
+  padding-right: 0.5em;
+}
+
+.darkSettings tr:not(:last-of-type) td {
+  padding-bottom: 0.5em;
+}
+
+.darkSettings fieldset:disabled input,
+.darkSettings fieldset:disabled select,
+.darkSettings fieldset:disabled label {
+  cursor: not-allowed;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.darkSettings button {
+  border: 1px solid #333;
+  background: none;
+  border-radius: 2em;
+  padding: 0.4em;
+  line-height: 1;
+}
+
+.darkSettings button:hover {
+  border: 1px solid #666;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.darkSettings button:active {
+  background: rgba(0, 0, 0, 0.2);
+}

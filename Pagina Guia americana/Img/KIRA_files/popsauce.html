@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="./fonts(1).css">
+  <link rel="stylesheet" href="./base(1).css">
+  <link rel="stylesheet" href="./game.css">
+  <link rel="stylesheet" href="./popsauce.css">
+</head>
+
+<body>
+  <div class="loading page" hidden="">
+    <div data-text="loading">Loading…</div>
+  </div>
+  <div class="main page">
+    <div class="top" hidden="">
+      <header class="status"></header>
+      <div class="startRoundNow" hidden="">&nbsp;<a href="https://falcon.jklm.fun/games/popsauce/#" data-text="startNow">Comenzar ahora</a></div>
+    </div>
+    <div class="restAndScoreboard">
+      <div class="middleAndBottom">
+        <div class="middle">
+          <div class="darkSettings rules darkScrollbar" hidden="">
+            <div class="tutorial">
+              <header data-text="howToPlay">Cómo jugar</header>
+              <p data-text="guessQuotes">Adivina de dónde proviene cada cita o imagen. ¡Cuanto más rápido encuentres la respuesta, más puntos obtendrás!</p>
+            </div>
+            <fieldset disabled="">
+              <div class="setting rule dictionaryId">
+                <div class="label" data-text="languageRuleLabel">👄 Idioma</div>
+                <div class="field"><select><option value="de">German</option><option value="en">Inglés</option><option value="es">Spanish</option><option value="fr">Francés</option><option value="hu">Hungarian</option></select></div>
+              </div>
+              <div class="setting rule tags">
+                <div class="label" data-text="tagFilteringRuleLabel">🏷️ Filtrado por etiquetas</div>
+                <div class="info">
+                  <span data-text="tagFilteringRuleInfo">Solo se seleccionarán challenges que coincidan con estas etiquetas. Actualmente activas:</span>
+                  <span class="filteredQuoteCount">89</span> <span data-text="outOf">de</span> <span class="totalQuoteCount">654</span>.
+                </div>
+                <div class="field">
+                  <div class="list darkScrollbar"><div class="item union" data-tag="Mainstream" title="Unión (incluir challenges con esta etiqueta)"><div class="op">∪</div><div class="tag">Mainstream</div><div class="actions"><button class="remove">✖</button></div></div><div class="item difference" data-tag="Difícil" title="Diferencia (excluir challenges con esta etiqueta)"><div class="op">∖</div><div class="tag">Difícil</div><div class="actions"><button class="remove">✖</button></div></div></div>
+
+                  <div class="insert">
+                    <datalist id="quoteTags"><option>Mainstream</option><option>Fácil</option><option>Intermedio</option><option>Difícil</option><option>AnimeyManga</option><option>Banderas</option><option>Capitales</option><option>Famosos</option><option>Futbol</option><option>Geografía</option><option>Imágenes</option><option>Música</option><option>Países</option><option>Textos</option></datalist>
+                    <input type="text" list="quoteTags">
+                    <button class="addUnion" title="Unión (incluir challenges con esta etiqueta)" data-title-text="filterUnion">∪</button>
+                    <button class="addIntersection" title="Intersección (solo challenges con esta etiqueta)" data-title-text="filterIntersection">∩</button>
+                    <button class="addDifference" title="Diferencia (excluir challenges con esta etiqueta)" data-title-text="filterDifference">∖</button>
+                  </div>
+                </div>
+              </div>
+              <div class="setting rule scoreGoal">
+                <div class="label" data-text="scoreGoalRuleLabel">🎯 Objetivo de puntuación (puntos)</div>
+                <div class="info" data-text="scoreGoalRuleInfo">El primer jugador en alcanzar esta puntuación gana la partida.</div>
+                <div class="field range"><input type="number" min="50" max="1000" step="10"><input type="range" min="50" max="1000" step="10"></div>
+              </div>
+              <div class="setting rule scoring">
+                <div class="label" data-text="scoringRuleLabel">🎲 Modo de puntuación</div>
+                <div class="info" data-text="scoringRuleInfo">Controla cómo se asignan los puntos.</div>
+                <div class="field">
+                  <select>
+                    <option value="timeBased" data-text="fastestAnswersGetMorePoints">Las respuestas más rápidas obtienen más puntos</option>
+                    <option value="constant" data-text="samePoints">Todas las respuestas valen 10 puntos</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting rule challengeDuration">
+                <div class="label" data-text="challengeDurationRuleLabel">⏲ Duración del challenge (segundos)</div>
+                <div class="info" data-text="challengeDurationRuleInfo">Tienes este tiempo para adivinar la respuesta.</div>
+                <div class="field range"><input type="number" min="5" max="30"><input type="range" min="5" max="30"></div>
+              </div>
+              <div class="setting rule shorthands">
+                <div class="label" data-text="shorthandsRuleLabel">✂️ Abreviaturas</div>
+                <div class="info" data-text="shorthandsRuleInfo">Permitir o rechazar abreviaturas comunes y ortografías alternativas.</div>
+                <div class="field radio">
+                  <input type="radio" name="shorthand" value="allow" id="shorthandAccepted"><label for="shorthandAccepted" data-text="allow">Permitir</label><input type="radio" name="shorthand" value="reject" id="shorthandRejected"><label for="shorthandRejected" data-text="reject">Rechazar</label>
+                </div>
+              </div>
+              <div class="setting rule visibleGuesses">
+                <div class="label" data-text="visibleGuessesRuleLabel">🔍 Visibilidad de respuestas incorrectas</div>
+                <div class="info" data-text="visibleGuessesRuleInfo">Mostrar u ocultar las respuestas incorrectas de otros jugadores.</div>
+                <div class="field radio">
+                  <input type="radio" name="visibleGuesses" value="public" id="visibleGuessesVisible"><label for="visibleGuessesVisible" data-text="show">Mostrar</label><input type="radio" name="visibleGuesses" value="private" id="visibleGuessesHidden"><label for="visibleGuessesHidden" data-text="hide">Ocultar</label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          <div class="content">
+            <div class="challengeArea">
+              <div class="quickRules">
+                <div class="summary"><span class="dictionary">Spanish</span> (<span class="scoreGoal">200</span> points)</div>
+                <button class="toggleRules">Mostrar reglas</button>
+              </div>
+              <div class="seating" hidden="">
+                <div class="logo">
+                  <img src="./logo.png" width="480" height="240">
+                </div>
+                <div class="lastRound">
+                  <div class="winnerPicture">
+                    <img>
+                    <div class="medal">🥇</div>
+                  </div>
+                  <div class="winnerNickname"></div>
+                  <div data-text="wonTheLastRound">ganó la última partida.</div>
+                </div>
+              </div>
+              <div class="round">
+                <div class="loading" data-text="loading" hidden="">Loading…</div>
+                <div class="challenge">
+                  <div class="header">
+                    <span class="prompt">Quién es esta cantante?</span>
+                    <span class="timer">Quedan 13s.</span>
+                  </div>
+                  <div class="textScroll darkScrollbar" hidden="">
+                    <div class="text"></div>
+                  </div>
+                  <div class="image">
+                    <div class="actual" style="background-image: url(&quot;blob:https://falcon.jklm.fun/19f1ab87-a415-4d8f-8553-dc6a337bd56d&quot;);"></div>
+                  </div>
+                </div>
+                <div class="challengeResult" hidden="">
+                  <div class="resultBox">
+                    <div class="source">
+                      <div data-text="theAnswerWas">La respuesta era</div>
+                      <div class="value">Anuel</div>
+                    </div>
+                    <div class="details"></div>
+                  </div>
+                  <div class="fastest">estebangod lo encontró primero.</div>
+                  <div class="submitter">Presentado por Richtolay.</div>
+                  <div class="imageCredits"></div>
+                </div>
+              </div>
+            </div>
+            <div class="scoreboard lower darkScrollbar"><div class="entry isOnline hasFoundSource" title="li"><img class="picture" src="./guest(1).png"><div class="score"><span>187</span></div><div class="text"><div class="nickname">li</div><div class="guess"></div></div></div><div class="entry isOnline hasFoundSource" title="NehuenSOBRIO"><img class="picture" src="./guest(1).png"><div class="score"><span>182</span></div><div class="text"><div class="nickname">NehuenSOBRIO</div><div class="guess"></div></div></div><div class="entry isOnline" title="estebangod"><img class="picture" src="./guest(1).png"><div class="score"><span>164</span></div><div class="text"><div class="nickname">estebangod</div><div class="guess"></div></div></div><div class="entry isOnline hasFoundSource" title="pne"><img class="picture" src="./guest(1).png"><div class="score"><span>7</span></div><div class="text"><div class="nickname">pne</div><div class="guess"></div></div></div></div>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="join" hidden="">
+            <button class="styled joinRound" data-text="joinGame">Unirse al juego</button>
+          </div>
+          <div class="joined">
+            <div class="seating" hidden="">
+              <span data-text="youAreIn">¡Es tu turno!</span>
+              <button class="styled red leaveRound" data-text="leaveGame" hidden="">Salir del juego</button>
+            </div>
+            <form class="round guessing">
+              <input type="text" minlength="1" maxlength="50" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="styled">
+            </form>
+            <div class="round doneGuessing" hidden="">No lo adivinaste.</div>
+          </div>
+        </div>
+      </div>
+      <div class="scoreboard right darkScrollbar"><div class="entry isOnline hasFoundSource" title="li"><img class="picture" src="./guest(1).png"><div class="score"><span>187</span></div><div class="text"><div class="nickname">li</div><div class="guess"></div></div></div><div class="entry isOnline hasFoundSource" title="NehuenSOBRIO"><img class="picture" src="./guest(1).png"><div class="score"><span>182</span></div><div class="text"><div class="nickname">NehuenSOBRIO</div><div class="guess"></div></div></div><div class="entry isOnline" title="estebangod"><img class="picture" src="./guest(1).png"><div class="score"><span>164</span></div><div class="text"><div class="nickname">estebangod</div><div class="guess"></div></div></div><div class="entry isOnline hasFoundSource" title="pne"><img class="picture" src="./guest(1).png"><div class="score"><span>7</span></div><div class="text"><div class="nickname">pne</div><div class="guess"></div></div></div></div>
+    </div>
+  </div>
+
+  <script src="./socket.io.js(1).descargar"></script>
+  <script src="./dom.js(1).descargar"></script>
+  <script src="./utils.js.descargar"></script>
+  <script src="./audio.js.descargar"></script><div hidden="" style="position: absolute; right: 0px; top: 0px; padding: 0.5em; margin: 0.5em; background: rgb(255, 255, 255); border-radius: 2em; opacity: 0.2;">🔇</div>
+  <script src="./gfx.js.descargar"></script>
+  <script src="./getPostJson.js(1).descargar"></script>
+  <script src="./math.js.descargar"></script>
+  <script src="./text.js(1).descargar"></script>
+  <script src="./game.js.descargar"></script>
+  <script src="./popsauce.js.descargar"></script>
+
+
+</body></html>

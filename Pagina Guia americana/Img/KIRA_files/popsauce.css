@@ -1,0 +1,578 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+}
+
+.page {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  background: #5c415a;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.1) inset;
+}
+
+.main.page {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  overflow-x: hidden;
+}
+
+.restAndScoreboard {
+  flex: 1;
+  display: flex;
+  flex-flow: row;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.middleAndBottom {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  overflow-x: hidden;
+}
+
+.top {
+  background: rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: #eee;
+  padding: 1em;
+  display: flex;
+  justify-content: center;
+}
+
+.top .startRoundNow a {
+  color: #fff;
+  font-size: smaller;
+}
+
+.middle {
+  display: flex;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  text-align: center;
+  align-items: stretch;
+  overflow: hidden;
+  position: relative;
+  color: #eee;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-flow: column;
+  overflow-x: hidden;
+}
+
+.rules {
+  z-index: 2;
+  position: absolute;
+  top: 5em;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.rule.tags .list {
+  border: 1px solid #333;
+  border-radius: 0.2em;
+  padding: 0.4em;
+  max-height: 12em;
+  overflow-y: auto;
+}
+
+.rule.tags .list .item {
+  display: flex;
+  align-items: center;
+  color: #eee;
+}
+
+.rule.tags .list .item:not(:last-of-type) {
+  margin-bottom: 0.25em;
+}
+
+.rule.tags .list .item.union {
+  background: rgba(0, 255, 48, 0.05);
+  color: #aea;
+}
+
+.rule.tags .list .item.intersection {
+  background: rgba(48, 96, 255, 0.05);
+  color: rgb(170, 180, 238);
+}
+
+.rule.tags .list .item.difference {
+  background: rgba(255, 48, 48, 0.05);
+  color: #eaa;
+}
+
+.rule.tags .list .item .op {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2em;
+  font-weight: bold;
+  padding: 0.25em 0.5em;
+  margin-left: 0.5em;
+}
+
+.rule.tags .list .item .tag {
+  flex: 1;
+  padding: 0.5em;
+}
+
+.rule.tags .list button {
+  border: none;
+  background: none;
+  padding: 0.5em;
+  color: #ccc;
+}
+
+.rule.tags .list button:hover {
+  color: #eee;
+}
+
+.rule.tags .list button:active {
+  color: #aaa;
+}
+
+.rule.tags .insert {
+  display: flex;
+  margin-top: 0.5em;
+}
+
+.rule.tags .insert input {
+  flex: 1;
+}
+
+.rule.tags .insert button {
+  margin-left: 0.5em;
+  color: #fff;
+  font-weight: bold;
+}
+
+.rules fieldset:disabled .rule.tags .list button,
+.rules fieldset:disabled .rule.tags .insert {
+  display: none;
+}
+
+.challengeArea {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  overflow-y: auto;
+}
+
+.quickRules {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+}
+
+.quickRules .toggleRules {
+  margin-left: 0.5em;
+}
+
+.quickRules button {
+  padding: 0.4em 0.8em;
+  color: #fff;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 2em;
+  background: transparent;
+  user-select: none;
+  cursor: pointer;
+}
+
+.quickRules button:hover,
+.quickRules button:focus {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.quickRules button:active {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.middle .content {
+  user-select: none;
+}
+
+.logo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo img {
+  max-width: 100%;
+  height: auto;
+}
+
+.middle .round .challenge {
+  flex: 1;
+  margin: 0 1em;
+  margin-bottom: 1.5em;
+  background: #7d5278;
+  padding: 0.5em;
+  display: flex;
+  flex-flow: column;
+  border-radius: 0.25em;
+  box-shadow: 0 0.125em 0.25em rgba(0, 0, 0, 0.2);
+  min-width: min(40vw, calc(512px + 2em));
+  min-height: 30vh;
+  max-height: calc(512px + 2em);
+}
+
+.middle .round .header {
+  margin-bottom: 0.5em;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5em;
+}
+
+.middle .round .challenge .timer {
+  font-size: smaller;
+  opacity: 0.5;
+}
+
+.middle .round .challenge .textScroll {
+  flex: 1;
+  padding: 1em;
+  display: flex;
+  white-space: pre-wrap;
+  font-size: 2em;
+  overflow-y: auto;
+}
+
+.middle .round .challenge .textScroll .text {
+  margin: auto;
+}
+
+.middle .round .challenge .image {
+  flex: 1;
+  padding: 1em;
+  max-height: calc(512px + 2em);
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+}
+
+.middle .round .challenge .image .actual {
+  flex: 1;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+.challengeResult .resultBox {
+  padding: 1em;
+  margin: 1em;
+  border-radius: 0.25em;
+}
+
+.challengeResult .source {
+  font-size: 1.5em;
+  padding-bottom: 1em;
+}
+
+.challengeResult .source .value {
+  font-weight: bold;
+  font-size: 2em;
+}
+
+.challengeResult .fastest {
+  font-size: smaller;
+  opacity: 0.8;
+}
+
+.challengeResult .submitter {
+  margin-top: 0.5em;
+  font-size: smaller;
+  opacity: 0.5;
+}
+
+.challengeResult .imageCredits {
+  margin-top: 0.25em;
+  font-size: smaller;
+  opacity: 0.3;
+}
+
+.content .seating,
+.content .round {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content .round {
+  flex-flow: column;
+  overflow-y: auto;
+}
+
+.middle .seating .lastRound {
+  color: #eee;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  padding: 1em;
+  min-width: 15em;
+}
+
+.middle .seating .winnerPicture {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 1em;
+}
+
+.middle .seating .winnerPicture img {
+  width: 96px;
+  height: 96px;
+  box-shadow: 0 0 1em rgba(255, 255, 255, 0.3);
+}
+
+.middle .seating .winnerPicture .medal {
+  position: absolute;
+  top: 96px;
+  right: 0;
+  font-size: 2em;
+  line-height: 0;
+  left: 0;
+}
+
+.middle .seating .winnerNickname {
+  font-size: 2em;
+  max-width: 9em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.scoreboard.right {
+  display: none;
+}
+
+.scoreboard {
+  background: rgba(0, 0, 0, 0.2);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.scoreboard.lower {
+  overflow-x: auto;
+}
+
+.scoreboard .entry {
+  padding: 0.25em;
+  border-radius: 0.25em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scoreboard .entry .picture {
+  width: 3em;
+  height: 3em;
+}
+
+.scoreboard .entry .score span {
+  font-size: smaller;
+  background: #201d20;
+  font-weight: bold;
+  border-radius: 0.25em;
+  padding: 0.25em;
+  line-height: 0.7;
+}
+
+.scoreboard .entry .text {
+  white-space: nowrap;
+  overflow-x: hidden;
+  font-size: smaller;
+  text-overflow: ellipsis;
+}
+
+.scoreboard .entry .nickname,
+.scoreboard .entry .guess {
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.scoreboard .entry:not(.isOnline) .nickname {
+  font-style: italic;
+  color: #aaa;
+}
+
+.scoreboard .entry.hasFoundSource {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.scoreboard .entry.hasFoundSource .nickname {
+  font-weight: bold;
+}
+
+.scoreboard.lower {
+  justify-content: center;
+}
+
+.scoreboard.lower .entry {
+  display: inline-block;
+  width: 4em;
+  margin: 0.5em 0;
+  margin-right: 0.5em;
+}
+
+.scoreboard.lower .entry:first-of-type {
+  margin-left: 0.5em;
+}
+
+.scoreboard.lower .entry .score {
+  text-align: center;
+  margin-top: -0.75em;
+  display: flex;
+  justify-content: center;
+  line-height: 1;
+}
+
+.scoreboard.lower .entry .guess {
+  display: none;
+}
+
+.bottom {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 4em;
+}
+
+.bottom .join,
+.bottom .joined {
+  margin: 0 0.5em;
+}
+
+.bottom .joined {
+  flex: 1;
+  display: flex;
+}
+
+.bottom .joined .seating,
+.bottom .joined .round {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  color: #eee;
+}
+
+.bottom .joined .seating .leaveRound {
+  margin-left: 0.5em;
+}
+
+.joined input {
+  text-align: center;
+  border: none;
+  border-radius: 1em;
+  flex: 1;
+  display: block;
+  margin: 0 auto;
+  min-width: 0;
+  max-width: 600px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.3) inset;
+  outline: none;
+  color: #eee;
+  font-size: 1.25em;
+}
+
+@media (max-height: 500px) {
+  .quickRules {
+    display: none;
+  }
+
+  .rules {
+    top: 0;
+  }
+
+  .scoreboard.lower {
+    display: none;
+  }
+
+  .middle .round .challenge {
+    margin: 0;
+    border: 0;
+    width: 100%;
+  }
+}
+
+@media (max-height: 800px) {
+  .middle .round .challenge .textScroll {
+    font-size: 1.5em;
+  }
+}
+
+@media (min-width: 1000px) {
+  .rules {
+    position: initial;
+    top: 0;
+    width: 380px;
+  }
+
+  .middle .round .challenge .textScroll {
+    max-width: 60vw;
+  }
+
+  .scoreboard.lower {
+    display: none;
+  }
+
+  .scoreboard.right {
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: #eee;
+  }
+
+  .scoreboard.right .entry {
+    width: 16em;
+    display: flex;
+    flex-flow: row;
+    position: relative;
+    margin: 0.5em;
+  }
+
+  .scoreboard.right .entry:not(:last-of-type) {
+    margin-bottom: 0;
+  }
+
+  .scoreboard.right .entry .score {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+
+  .scoreboard.right .entry .text {
+    margin-left: 0.25em;
+    text-align: left;
+    display: flex;
+    flex-flow: column;
+    max-height: 64px;
+    overflow: hidden;
+  }
+
+  .scorboard .entry .text .nickname {
+    overflow: hidden;
+  }
+
+  .scoreboard.right .entry .guess {
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
+}

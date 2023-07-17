@@ -1,0 +1,119 @@
+body {
+    background-color: rgb(255, 255, 255)
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+}
+h1 {
+    font-size: 2.6rem
+
+}
+
+
+/* contenedor1 */
+
+.button {
+    display: inline-block;
+    /* Estilos adicionales del botón */
+  }
+.button * {
+    pointer-events: none;
+  }
+
+/* hero principal */
+
+.hero {
+    margin-top: 90px;
+    margin: 70px;
+    background-color: rgb(255, 255, 255)
+}
+.hero-imagen-principal {
+    width: 200px;
+    height: 200px;
+    margin: 20px;
+    
+}
+
+.Titulo {
+    text-align: center;
+    font-family: 'Kanit', sans-serif;
+    font-family: 'Roboto Slab', serif;
+    font-family: 'Saira Extra Condensed', sans-serif;
+
+}
+
+.Col3fila1 {
+    margin: auto;
+}
+.col3fila2 {
+    margin-top: 90px;
+    margin-left: 10px;
+    
+}
+.col3fila2-fila2 {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+.sinsub {
+    text-decoration: none;
+    color: aliceblue;
+}
+.boton-col3fila2-fila1 {
+    transform: scale(1); /* Tamaño inicial */
+    transition: transform 0.3s ease; /* Transición suave */
+      /* Estilos personalizados del botón */
+
+}
+.boton-col3fila2-fila1:hover {
+    transform: scale(1.1); /* Tamaño al pasar el cursor */
+}
+.boton-col3fila2-fila2{
+    transform: scale(1); /* Tamaño inicial */
+    transition: transform 0.3s ease; /* Transición suave */
+    
+}
+.boton-col3fila2-fila2:hover {
+    transform: scale(1.1); /* Tamaño al pasar el cursor */
+  }
+.hero-imagen-s {
+    margin-top: 10%;
+    margin-bottom: 10%;
+}
+.columna3 {
+    margin-top: 70px;
+}
+
+
+/* hero inferior */
+
+.Hero-inferior {
+    margin-top: 20px;
+}
+
+
+/* .columna1 {
+    background-color: brown;
+}
+.columna2 {
+    background-color: aquamarine;
+}
+.columna3 {
+    background-color: rgb(106, 248, 30);
+}
+
+.Col3fila1{
+    background-color: brown;
+} */
+
+/* media q */
+
+@media screen and (max-width: 767px) {
+    .navbar-brand {
+        display: none;
+    }
+}

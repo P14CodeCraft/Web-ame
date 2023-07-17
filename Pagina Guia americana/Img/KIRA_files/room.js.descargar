@@ -1,0 +1,815 @@
+﻿"use strict";
+
+function getAuthTextFromProfile(profile) {
+  return profile.auth != null ? `${profile.auth.username} on ${getAuthServiceName(profile.auth.service)}` : `Guest (${profile.peerId})`;
+}
+
+const badgesByRole = {
+  "leader": { icon: "👑", text: getText("Party leader", "role.leader") },
+  "moderator": { icon: "⚔️", text: getText("Moderator", "role.moderator") },
+  "creator": { icon: "🎪", text: getText("JKLM.FUN's creator", "role.creator") },
+  "staff": { icon: "⭐", text: getText("JKLM.FUN staff", "role.staff") },
+  "bot": { icon: "🤖", text: getText("JKLM.FUN BOT", "role.bot") },
+  "banned": { icon: "⛔", text: getText("Banned", "role.banned") },
+};
+
+const publicChatFilter = ["nig" + "ger"];
+
+// Game
+const gameContainer = $(".main .game");
+
+let gameWindow;
+let nodeUrl;
+let socket = null;
+
+window.addEventListener("message", window_onMessageFromGame, false);
+
+function window_onMessageFromGame(event) {
+  if (event.source !== gameWindow) return;
+
+  switch (event.data.name) {
+    case "appendToChat": appendToChat(null, event.data.text); break;
+    case "focusChat": focusChat(); break;
+    case "focusGameWindow": gameWindow.focus(); break;
+    case "setGame": socket.emit("setGame", event.data.gameId); break;
+    case "disconnected": disconnect(); break;
+  }
+}
+
+// Self user
+const userToken = getUserToken();
+
+let selfPeerId;
+let selfRoles;
+
+let roomEntry;
+const roomCode = location.pathname.substr(1, 4).toUpperCase();
+const roomUrlElt = $(".top .info .url");
+const ipAddressElt = $(".userProfile .ipAddress");
+
+
+roomUrlElt.addEventListener("click", onRoomUrlClick);
+roomUrlElt.addEventListener("mouseleave", onRoomUrlMouseLeave);
+
+ipAddressElt.addEventListener("click", onIpAddressClick);
+ipAddressElt.addEventListener("mouseleave", onIpAddressMouseLeave);
+
+
+function copyToClipboard(url){
+  if (navigator.clipboard != null) navigator.clipboard.writeText(url);
+  else {
+    const tempInput = $make("input", document.body, { type: "text", value: url });
+    tempInput.select();
+    document.execCommand("copy");
+    tempInput.remove();
+  }
+}
+
+function onRoomUrlClick(event) {
+  $setTooltip(roomUrlElt, getText("Copied!", "copied"));
+
+  copyToClipboard("https://jklm.fun/" + roomCode);
+}
+
+function onRoomUrlMouseLeave(event) {
+  $setTooltip(roomUrlElt, getText("Copy room link", "copyRoomLink"));
+}
+
+function onIpAddressClick(event) {
+  $setTooltip(ipAddressElt, getText("Copied!", "copied"));
+
+  copyToClipboard(ipAddressElt.textContent);
+}
+
+function onIpAddressMouseLeave(event) {
+  $setTooltip(ipAddressElt, getText("Copy ip", "copyIp"));
+}
+
+// Volume
+const toggleMuteButton = $(".top .toggleMute");
+const volumeSlider = $(".top .volume input");
+
+toggleMuteButton.textContent = settings.muted ? "🔇" : "🔊";
+volumeSlider.value = settings.muted ? 0 : Math.round(settings.volume * 100);
+
+toggleMuteButton.addEventListener("click", onToggleMuteButtonClick);
+volumeSlider.addEventListener("input", onVolumeSliderInput)
+
+function onToggleMuteButtonClick(event) {
+  settings.muted = !settings.muted;
+  toggleMuteButton.textContent = settings.muted ? "🔇" : "🔊";
+  volumeSlider.value = settings.muted ? 0 : Math.round(settings.volume * 100);
+  if (gameWindow != null) gameWindow.postMessage({ name: "setVolume", volume: settings.muted ? 0 : settings.volume }, "*");
+  saveSettings();
+}
+
+function onVolumeSliderInput(event) {
+  toggleMuteButton.textContent = "🔊";
+  settings.volume = volumeSlider.value / 100;
+  if (settings.volume === 0) {
+    settings.volume = 0.5;
+    settings.muted = true;
+  } else {
+    settings.muted = false;
+  }
+
+  toggleMuteButton.textContent = settings.muted ? "🔇" : "🔊";
+  if (gameWindow != null) gameWindow.postMessage({ name: "setVolume", volume: settings.muted ? 0 : settings.volume }, "*");
+  saveSettings();
+}
+
+// Sidebar
+const sidebar = $(".sidebar");
+const sidebarToggleButton = $(".sidebarToggle");
+sidebarToggleButton.addEventListener("click", (event) => { event.preventDefault(); toggleSidebar(); });
+
+function toggleSidebar(visible) {
+  $show(sidebar, visible != null ? visible : sidebar.hidden);
+  sidebarToggleButton.classList.remove("unread");
+  sidebarToggleButton.textContent = sidebar.hidden ? "◀" : "▶";
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// Chat
+const chatButton = $(".sidebar .tabs .chat");
+const chatTab = $(".sidebar > .chat");
+const chatLog = $(".sidebar .chat .log");
+const setChatFilterButton = $(".sidebar .chat .setChatFilter");
+const chatTextArea = $(".chat .input textarea");
+
+let chatMessageCount = 0;
+const maxChatMessageCount = 200;
+
+chatButton.addEventListener("click", onChatButtonClick);
+chatLog.addEventListener("click", onChatLogClick);
+setChatFilterButton.addEventListener("click", onSetChatFilterClick);
+chatTextArea.addEventListener("keydown", onChatTextAreaKeyDown);
+
+function onChatButtonClick(event) {
+  event.preventDefault();
+
+  $(".sidebar .tabs .active").classList.remove("active");
+  chatButton.classList.add("active");
+
+  $hide(".sidebar > .pane:not([hidden])");
+  $show(chatTab);
+  focusChat();
+}
+
+function onChatLogClick(event) {
+  $hide(unreadMarkerElt);
+
+  if (event.target.tagName === "A" && event.target.classList.contains("author")) {
+    event.preventDefault();
+    showUserProfile(parseInt(event.target.dataset["peerId"], 10));
+  }
+}
+
+function onSetChatFilterClick(event) {
+  event.preventDefault();
+
+  const chatFilterText = prompt(getText("Please enter all words you want to filter from chat messages, separated by a space.", "setChatFilter.prompt"), settings.chatFilter.join(" "));
+  settings.chatFilter = chatFilterText.split(" ").map(x => x.trim().toLowerCase()).filter(x => x.length > 0);
+  saveSettings();
+}
+
+function onChatTextAreaKeyDown(event) {
+  if (!event.shiftKey && event.keyCode === 13) {
+    event.preventDefault();
+
+    const text = chatTextArea.value.trim();
+    if (text.length > 0) socket.emit("chat", text);
+
+    chatTextArea.value = "";
+  }
+}
+
+function socket_onChatterAdded(profile) {
+  appendToChat(null, getText(`{nickname} has joined.`, "chatterHasJoined", profile));
+}
+
+function socket_onChatterRemoved(profile) {
+  appendToChat(null, getText(`{nickname} has left.`, "chatterHasLeft", profile));
+}
+
+function socket_onChat(authorProfile, text, customProperties = {}) {
+  if (settings.chatFilter.length > 0) text = text.split(" ").map(x => settings.chatFilter.includes(x.toLowerCase()) ? "■".repeat(x.length) : x).join(" ");
+  if (authorProfile.peerId !== selfPeerId && roomEntry.isPublic) text = text.split(" ").map(x => publicChatFilter.includes(x.toLowerCase()) ? "■".repeat(x.length) : x).join(" ");
+
+  appendToChat(authorProfile, text, customProperties);
+}
+
+function socket_onChatRateLimited() {
+  const rateLimitedMessage = getText("Not so fast! You're sending messages too quickly.", "chatRateLimited");
+  appendToChat(null, rateLimitedMessage);
+
+  chatTextArea.classList.add("rateLimited");
+  chatTextArea.placeholder = rateLimitedMessage;
+  chatTextArea.disabled = true;
+
+  setTimeout(() => {
+    chatTextArea.classList.remove("rateLimited");
+    chatTextArea.placeholder = getText("Type here to chat", "typeHereToChat");
+    chatTextArea.disabled = false;
+  }, 3000);
+}
+
+function socket_onChatCrowded(isCrowded) {
+  let baseText = isCrowded
+    ? "It's getting crowded in here! Join/leave messages won't be sent until the crowd clears."
+    : "The crowd has cleared, join/leave messages will be sent again.";
+
+  appendToChat(null, getText(baseText, `chatCrowded.${isCrowded}`));
+}
+
+function socket_onUserBanned({ nickname, peerId }) {
+  const bannedUserMessages = $$(`.log.darkScrollbar [data-peer-id="${peerId}"] + .text`);
+  for (const message of bannedUserMessages) {
+    message.textContent = getText("(deleted)", "chatDeleted");
+    message.classList.add("deleted");
+  }
+}
+
+function focusChat() {
+  if (!sidebar.hidden && !chatTab.hidden) chatTextArea.focus();
+}
+
+const unreadMarkerElt = $make("div", null, { className: "newMessages" });
+$make("hr", unreadMarkerElt);
+$make("span", unreadMarkerElt, { textContent: getText("New messages", "newMessages") });
+$make("hr", unreadMarkerElt);
+$hide(unreadMarkerElt);
+
+function applyStyleProperties(element, customProperties) {
+  for (const property in customProperties) {
+    const propertyValue = customProperties[property];
+    element.style.setProperty(`--bot-messages-${property}`, propertyValue);
+  }
+}
+
+function socket_onSetStyleProperties(customProperties) {
+  applyStyleProperties(document.documentElement, customProperties);
+}
+
+function appendToChat(authorProfile, text, customProperties = null) {
+  if (authorProfile != null && !authorProfile.isBroadcast && mutedPeerIds.includes(authorProfile.peerId)) return;
+  if (sidebar.hidden) sidebarToggleButton.classList.add("unread");
+
+  chatMessageCount++;
+  if (chatMessageCount > maxChatMessageCount) chatLog.removeChild($(chatLog, "div:not(.newMessages)"));
+
+  const isScrolledToBottom = chatLog.scrollHeight - chatLog.clientHeight - chatLog.scrollTop < 10;
+  const defaultLogEntryClassName = customProperties !== null ? "bot-messages" : "";
+  const logEntry = $make("div", chatLog, { className: authorProfile == null ? "system" : defaultLogEntryClassName });
+
+  //if it's a customized message, apply properties only to this message
+  if (defaultLogEntryClassName === "bot-messages") applyStyleProperties(logEntry, customProperties)
+
+  const time = new Date();
+  const hoursMinutes = `0${time.getHours()}`.slice(-2) + ":" + `0${time.getMinutes()}`.slice(-2);
+  $make("span", logEntry, { className: "time", textContent: hoursMinutes });
+  $makeText(" ", logEntry);
+
+  if (authorProfile != null && authorProfile.isBroadcast) {
+    const broadcast = $make("span", logEntry, { className: "broadcast" });
+    $make("span", broadcast, { className: "author", textContent: authorProfile.nickname });
+    $makeText(": " + text, broadcast);
+  } else {
+    if (authorProfile != null) {
+      const roles = authorProfile.roles != null ? authorProfile.roles : [];
+      const badgesElt = $make("span", logEntry, { className: "badges" });
+      for (const role of roles) {
+        const badge = badgesByRole[role];
+        $make("span", badgesElt, { textContent: badge.icon, title: badge.text });
+      }
+
+      const service = authorProfile.auth != null ? authorProfile.auth.service : "guest";
+      const link = $make("a", logEntry, { className: `author ${service}`, dataset: { "peerId": authorProfile.peerId }, href: "#" });
+      $make("img", link, { className: "service", src: `/images/auth/${service}.png`, alt: "" });
+      $makeText(authorProfile.nickname, link);
+      $setTooltip(link, getAuthTextFromProfile(authorProfile));
+
+      $makeText(": ", logEntry);
+    }
+
+    $make("span", logEntry, { className: "text", textContent: text });
+  }
+
+  if (document.visibilityState === "hidden" || sidebar.hidden || chatTab.hidden) {
+    if (unreadMarkerElt.hidden) {
+      chatLog.insertBefore(unreadMarkerElt, logEntry);
+      $show(unreadMarkerElt);
+    }
+  }
+
+  if (isScrolledToBottom) chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// People list
+const roomButton = $(".sidebar .tabs .room");
+const roomPrivacySettingSelect = $(".sidebar > .room .privacy.setting select");
+
+const chatModeSelect = $(".chatModeSelect");
+
+const peopleFilterField = $(".sidebar > .room .people .filter input");
+const peopleList = $(".sidebar > .room .people .list");
+let latestChatterProfiles = [];
+let mutedPeerIds = [];
+
+roomPrivacySettingSelect.addEventListener("change", roomPrivacySetting_onChange);
+chatModeSelect.addEventListener("change", roomChatMode_onChange);
+roomButton.addEventListener("click", onRoomButtonClick);
+peopleFilterField.addEventListener("input", onPeopleFilterFieldInput);
+peopleList.addEventListener("click", onPeopleListClick);
+
+function roomPrivacySetting_onChange(event) {
+  socket.emit("setRoomPublic", roomPrivacySettingSelect.value === "public");
+}
+
+function roomChatMode_onChange(event) {
+  socket.emit("setChatMode", chatModeSelect.value);
+}
+
+function onRoomButtonClick(event) {
+  event.preventDefault();
+
+  $(".sidebar .tabs .active").classList.remove("active");
+  roomButton.classList.add("active");
+
+  $hide(".sidebar > .pane:not([hidden])");
+  $show(".sidebar > .room");
+  $show(".sidebar > .room .people > .loading");
+  $hide(".sidebar > .room .people > .content");
+
+  peopleFilterField.focus();
+  peopleList.innerHTML = "";
+
+  socket.emit("getChatterProfiles", (chatterProfiles) => {
+    $hide(".sidebar > .room .people > .loading");
+    $show(".sidebar > .room .people > .content");
+
+    latestChatterProfiles = chatterProfiles;
+    peopleList.innerHTML = "";
+    const needle = peopleFilterField.value.toLowerCase().trim();
+
+    for (const profile of chatterProfiles) {
+      const visible = needle.length == 0 || profile.nickname.toLowerCase().indexOf(needle) !== -1 || (profile.auth != null && profile.auth.username.toLowerCase().indexOf(needle) !== -1);
+      const chatterDiv = $make("div", peopleList, { className: "chatter", dataset: { "peerId": profile.peerId }, hidden: !visible });
+      chatterDiv.classList.toggle("banned", profile.roles.includes("banned"));
+
+      const imageEl = $make("img", chatterDiv, { className: "picture" });
+      imageEl.src = profile.picture != null ? `data:image/jpeg;base64,${profile.picture}` : "/images/auth/guest.png";
+
+      const mainDiv = $make("div", chatterDiv, { className: "main" });
+      $make("div", mainDiv, { className: "nickname", textContent: profile.nickname });
+      $make("div", mainDiv, { className: "auth", textContent: getAuthTextFromProfile(profile) });
+
+      const badgesDiv = $make("div", chatterDiv, { className: "badges" });
+      for (const role of profile.roles) {
+        const badge = badgesByRole[role];
+        $make("div", badgesDiv, { textContent: badge.icon, title: badge.text });
+      }
+    }
+  });
+}
+
+function onPeopleFilterFieldInput(event) {
+  const needle = peopleFilterField.value.toLowerCase().trim();
+
+  for (const profile of latestChatterProfiles) {
+    const visible = needle.length == 0 || profile.nickname.toLowerCase().indexOf(needle) !== -1 || (profile.auth != null && profile.auth.username.toLowerCase().indexOf(needle) !== -1);
+    $(peopleList, `.chatter[data-peer-id="${profile.peerId}"]`).hidden = !visible;
+  }
+}
+
+function onPeopleListClick(event) {
+  let target = event.target;
+  while (!target.classList.contains("chatter")) {
+    if (target === peopleList) return;
+    target = target.parentElement;
+  }
+
+  showUserProfile(parseInt(target.dataset["peerId"], 10));
+}
+
+// User profile
+const userProfileDiv = $(".sidebar > .userProfile");
+let viewedUserProfile;
+
+const toggleBanUserButton = $(userProfileDiv, ".manage .toggleBan");
+const toggleModUserButton = $(userProfileDiv, ".manage .toggleMod");
+const toggleMuteUserButton = $(userProfileDiv, ".manage .toggleMute");
+const makeUserLeaderButton = $(userProfileDiv, ".manage .makeLeader");
+
+toggleBanUserButton.addEventListener("click", onToggleBanUserClick);
+toggleModUserButton.addEventListener("click", onToggleModUserClick);
+toggleMuteUserButton.addEventListener("click", onToggleMuteUserClick);
+makeUserLeaderButton.addEventListener("click", onMakeUserLeaderClick);
+
+function showUserProfile(peerId) {
+  $(".sidebar .tabs .active").classList.remove("active");
+  roomButton.classList.add("active");
+  $hide(".sidebar > .pane:not([hidden])");
+
+  $show(userProfileDiv);
+  $show($(userProfileDiv, ".loading"));
+  $hide($(userProfileDiv, ".content"));
+
+  socket.emit("getChatterProfile", peerId, (profile) => {
+    viewedUserProfile = profile;
+
+    renderViewedUserProfile();
+  });
+}
+
+function renderViewedUserProfile() {
+  const profile = viewedUserProfile;
+
+  $hide($(userProfileDiv, ".loading"));
+  $show($(userProfileDiv, ".content"));
+
+  $(userProfileDiv, ".picture img").src = profile != null && profile.picture != null ? `data:image/jpeg;base64,${profile.picture}` : "/images/auth/guest.png";
+  $(userProfileDiv, ".nickname").textContent = profile != null ? profile.nickname : "No such user";
+  $(userProfileDiv, ".auth").textContent = profile != null ? getAuthTextFromProfile(profile) : "";
+
+  const badgesDiv = $(userProfileDiv, ".badges");
+  badgesDiv.innerHTML = "";
+
+  if (profile == null) return;
+
+  for (const role of profile.roles) {
+    const badge = badgesByRole[role];
+    $make("div", badgesDiv, { textContent: `${badge.icon} ${badge.text}` });
+  }
+
+  const isSelfStaffOrCreator = selfRoles.includes("staff") || selfRoles.includes("creator") || (selfRoles.includes("moderator") && settings.auth && settings.auth.service === "jklm");
+  const isSelfLeaderOrModerator = selfRoles.includes("leader") || selfRoles.includes("moderator");
+  const isOtherLeaderOrModerator = profile.roles.includes("leader") || profile.roles.includes("moderator");
+  const isOtherStaffOrCreator = profile.roles.includes("staff") || profile.roles.includes("creator");
+
+  toggleBanUserButton.textContent = profile != null && profile.roles.includes("banned") ? getText("Unban", "unban") : getText("Ban", "ban");
+  $show(toggleBanUserButton, profile.peerId !== selfPeerId && (isSelfStaffOrCreator || (isSelfLeaderOrModerator && !isOtherLeaderOrModerator && !isOtherStaffOrCreator)));
+
+  toggleModUserButton.textContent = profile != null && profile.roles.includes("moderator") ? getText("Unmod", "unmod") : getText("Mod", "mod");
+  toggleModUserButton.hidden = profile.peerId === selfPeerId || (!selfRoles.includes("creator") && !selfRoles.includes("staff") && !selfRoles.includes("leader"));
+
+  toggleMuteUserButton.textContent = profile != null && mutedPeerIds.includes(profile.peerId) ? getText("Unmute", "unmute") : getText("Mute", "mute");
+  toggleMuteUserButton.hidden = profile.peerId === selfPeerId;
+
+  $show(makeUserLeaderButton, profile.peerId !== selfPeerId && (selfRoles.includes("creator") || selfRoles.includes("staff") || selfRoles.includes("leader")));
+
+  const ipAddressElt = $(userProfileDiv, ".ipAddress");
+  ipAddressElt.textContent = profile.ipAddress || "";
+  $show(ipAddressElt, selfRoles.includes("creator") || selfRoles.includes("staff"));
+}
+
+function onToggleBanUserClick(event) {
+  event.preventDefault();
+
+  const bannedUserProfile = viewedUserProfile;
+  const isBanned = !bannedUserProfile.roles.includes("banned");
+
+  socket.emit("setUserBanned", bannedUserProfile.peerId, isBanned, (res) => {
+    if (res.errorCode) return alert("Failed to ban: " + res.errorCode);
+
+    bannedUserProfile.roles = isBanned ? ["banned"] : [];
+    renderViewedUserProfile();
+  });
+}
+
+function onToggleMuteUserClick(event) {
+  event.preventDefault();
+
+  const mutedUserProfile = viewedUserProfile;
+  const mutedUserProfileIndex = mutedPeerIds.indexOf(mutedUserProfile.peerId);
+
+  if (mutedUserProfileIndex === -1) mutedPeerIds.push(mutedUserProfile.peerId);
+  else mutedPeerIds.splice(mutedUserProfileIndex, 1);
+  renderViewedUserProfile();
+}
+
+function onToggleModUserClick(event) {
+  event.preventDefault();
+
+  const moddedUserProfile = viewedUserProfile;
+  const isModerator = !moddedUserProfile.roles.includes("moderator");
+
+  socket.emit("setUserModerator", moddedUserProfile.peerId, isModerator, (res) => {
+    if (res.errorCode) return alert("Failed to set moderator: " + res.errorCode);
+
+    moddedUserProfile.roles = res.roles;
+    renderViewedUserProfile();
+  });
+}
+
+function onMakeUserLeaderClick(event) {
+  event.preventDefault();
+
+  const targetUserProfile = viewedUserProfile;
+  const confirmed = confirm(getText("You won't be the leader of this room anymore. Are you sure?", "youWontBeLeaderAnymore"));
+  if (!confirmed) return;
+
+  socket.emit("setUserLeader", targetUserProfile.peerId, (res) => {
+    if (res.errorCode) return alert("Failed to set leader: " + res.errorCode);
+
+    targetUserProfile.roles = res.roles;
+    renderViewedUserProfile();
+  });
+}
+
+// Change game
+const changeGameButton = $(".sidebar .changeGame");
+
+changeGameButton.addEventListener("click", onChangeGameClick);
+
+function onChangeGameClick(event) {
+  event.preventDefault();
+  if (confirm(getText("This will end the current game. Are you sure?", "willEndCurrentGame"))) {
+    socket.emit("setGame", "selector");
+    if (!isLargeScreen()) $hide(sidebar);
+  }
+}
+
+// Leave room
+const leaveRoomButton = $(".sidebar .leaveRoom");
+leaveRoomButton.addEventListener("click", onLeaveRoomClick);
+
+function onLeaveRoomClick(event) {
+  event.preventDefault();
+
+  if (confirm(getText("Leave this room?", "leaveThisRoom"))) {
+    socket.emit("forceQuit");
+    location.href = "/";
+  }
+}
+
+// Room
+const nicknameField = $(".setNickname.page input.nickname");
+
+const setNicknameForm = $(".setNickname.page form.setNickname");
+setNicknameForm.addEventListener("submit", setNicknameForm_onSubmit);
+
+function updateRoomPrivacy() {
+  roomPrivacySettingSelect.value = roomEntry.isPublic ? "public" : "private";
+  $(".info").classList.toggle("privateRoom", !roomEntry.isPublic);
+  $(".info .roomCode").textContent = roomEntry.isPublic ? roomCode : "●●●●";
+  $(".info .icon").textContent = roomEntry.isPublic ? "🌎" : "🔒";
+}
+
+function updateChatMode() {
+  chatModeSelect.value = roomEntry.chatMode;
+
+  // Staff and creator can always type in chat.
+  if (["staff", "creator"].some(x => selfRoles.includes(x))) {
+    chatTextArea.disabled = false;
+    chatTextArea.placeholder = getText("Type here to chat", "typeHereToChat");
+    return;
+  }
+
+  switch (roomEntry.chatMode) {
+    case "enabled":
+      chatTextArea.disabled = false;
+      chatTextArea.placeholder = getText("Type here to chat", "typeHereToChat");
+      break;
+    case "disabled":
+      chatTextArea.disabled = true;
+      chatTextArea.placeholder = getText("Chat is disabled in this room.", "chatDisabled");
+      chatTextArea.value = "";
+      break;
+    case "noGuests":
+      if (settings.auth == null) { // if current user is guest
+        chatTextArea.disabled = true;
+        chatTextArea.placeholder = getText("Chat is disabled for guests in this room.", "chatDisabledForGuests");
+        chatTextArea.value = "";
+      } else {
+        chatTextArea.disabled = false;
+        chatTextArea.placeholder = getText("Type here to chat", "typeHereToChat");
+      }
+      break;
+  }
+}
+
+function disconnect(errorCode, isFatal = false) {
+  if (socket != null) {
+    // Ensure a disconnect from game socket or a kick reason aren't overridden
+    socket.off("disconnect");
+
+    // Prevent reconnects
+    if (isFatal) socket.close();
+  }
+
+  let reason = errorCode || getText("You were disconnected.", "youWereDisconnected");
+  const reasonDiv = $(".disconnected.page .reason");
+  reasonDiv.innerHTML = "";
+
+  if (errorCode == "authFailed") {
+    reasonDiv.appendChild(document.createTextNode(`Failed to authenticate with ${getAuthServiceName(settings.auth.service)}, if it happens again, try `));
+    const logoutLink = $make("a", reasonDiv, { textContent: "logging out", href: "#" });
+    reasonDiv.appendChild(document.createTextNode("."));
+
+    logoutLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      settings.auth = null;
+      saveSettings();
+      window.location.reload();
+    });
+  } else {
+    switch (errorCode) {
+      case "noSuchRoom": reason = getText("Sorry, this room doesn't exist anymore. But there are many others!", errorCode); break;
+      case "userTokenInUse": reason = getText("It seems you are already connected elsewhere.", errorCode); break;
+      case "nodeOffline": reason = getText("The server hosting this room is offline. You can try again in a few seconds.", errorCode); break;
+      case "banned": reason = getText("Sorry, you're banned from this room. But there are many others to play in!", errorCode); break;
+    }
+
+    reasonDiv.textContent = reason;
+  }
+  $show(".reconnecting", !isFatal);
+  gameContainer.innerHTML = "";
+  $hide(".page:not([hidden])");
+  $hide(sidebarToggleButton);
+  $show(".disconnected.page");
+}
+
+function loadGame(gameId) {
+  roomEntry.gameId = gameId;
+
+  gameWindow = null;
+  gameContainer.innerHTML = "";
+
+  const gameIframe = $make("iframe", gameContainer, { src: `${nodeUrl}/games/${gameId}` });
+  gameIframe.addEventListener("load", () => {
+    gameWindow = gameIframe.contentWindow;
+    gameWindow.postMessage({ name: "setVolume", volume: settings.muted ? 0 : settings.volume }, "*");
+    gameWindow.postMessage({ name: "joinGame", roomCode, gameId, userToken }, "*");
+  });
+
+  $hide(".page:not([hidden])");
+  $show(".main.page");
+  focusChat();
+}
+
+function socket_onWillTransferRoom() {
+  appendToChat({ isBroadcast: true }, getText(`This room is about to be transfered to another server. Beam me up, Scotty!`, "willTransferRoom"));
+}
+
+function socket_onNodeWillRestart({ timeLeftSeconds }) {
+  const timeLeftMinutes = Math.ceil(timeLeftSeconds / 60);
+  const hours = Math.floor(timeLeftMinutes / 60).toString();
+  const minutes = Math.floor(timeLeftMinutes % 60).toString();
+  let timeLeft = `${hours}h`;
+  if (minutes !== "0") timeLeft += ` ${minutes}mn`;
+
+  appendToChat({ isBroadcast: true }, getText(`This server will restart to update in {timeLeft}. If your game is not over by then, it will be interrupted.`, "nodeWillRestart", { timeLeft }));
+}
+
+function socket_onSetChatMode(chatMode) {
+  roomEntry.chatMode = chatMode;
+
+  switch (chatMode) {
+    case "enabled": appendToChat(null, getText("Chat is now enabled for everyone.", "chatModeChanged.all")); break;
+    case "disabled": appendToChat(null, getText("Chat is now disabled.", "chatModeChanged.disabled")); break;
+    case "noGuests": appendToChat(null, getText("Guests can no longer post messages in chat.", "chatModeChanged.noGuests")); break;
+  }
+
+  updateChatMode();
+}
+
+function socket_onSetRoomPublic(isPublic) {
+  roomEntry.isPublic = isPublic;
+  if (isPublic) appendToChat(null, getText(`This room is now public.`, "roomPrivacyChanged.public"));
+  else appendToChat(null, getText(`This room is now private.`, "roomPrivacyChanged.private"));
+
+  updateRoomPrivacy();
+}
+
+function socket_onSetSelfRoles(roles) {
+  selfRoles = roles;
+
+  let badge = { icon: "", text: "" };
+  if (selfRoles.includes("leader")) badge = badgesByRole["leader"];
+  else if (selfRoles.includes("moderator")) badge = badgesByRole["moderator"];
+  else if (selfRoles.includes("staff")) badge = badgesByRole["staff"];
+  else if (selfRoles.includes("creator")) badge = badgesByRole["creator"];
+
+  const mainBadgeElt = $(".top .mainBadge");
+  mainBadgeElt.textContent = badge != null ? badge.icon : "";
+  mainBadgeElt.title = badge != null ? getText(`You are ${badge.text}`, "youAreRole", { role: badge.text }) : "";
+  $show(mainBadgeElt, badge.icon != "");
+
+  const isLeader = selfRoles.includes("leader") || selfRoles.includes("staff");
+  $show(changeGameButton, isLeader);
+
+  const canEditSettings = selfRoles.includes("leader") || selfRoles.includes("staff") || selfRoles.includes("creator");
+  for (const element of $$(".sidebar > .room .darkSettings fieldset")) {
+    element.disabled = !canEditSettings;
+  }
+}
+
+function setNicknameForm_onSubmit(event) {
+  if (!setNicknameForm.checkValidity()) return;
+  event.preventDefault();
+
+  settings.nickname = nicknameField.value;
+  saveSettings();
+
+  $hide(".page:not([hidden])");
+  $show(".loading.page");
+  postApiJoinRoom();
+}
+
+function postApiJoinRoom() {
+  postJson("/api/joinRoom", { roomCode }, onPostJoinRoomResult);
+}
+
+function onPostJoinRoomResult(res) {
+  if (res.errorCode) return disconnect(res.errorCode, true);
+
+  nodeUrl = res.url;
+  console.log(`Connecting to 📺 JKLM node at ${nodeUrl}...`);
+  socket = io(nodeUrl, {
+    reconnection: true,
+    transports: ["websocket"]
+  });
+
+  socket.on("connect", socket_onConnect);
+
+  socket.on("kicked", (reason) => disconnect(reason, true));
+  socket.on("connect_error", (error) => disconnect(`Connection error: ${error.message}`));
+
+  socket.on("disconnect", () => disconnect());
+
+  socket.on("setPlayerCount", (playerCount) => { $(".playerCount").textContent = playerCount; });
+  socket.on("changeRoom", (roomCode) => location.href = `/${roomCode}`);
+  socket.on("setGame", (newGameId) => loadGame(newGameId));
+  socket.on("setChatMode", socket_onSetChatMode);
+  socket.on("setRoomPublic", socket_onSetRoomPublic);
+  socket.on("willTransferRoom", socket_onWillTransferRoom);
+  socket.on("nodeWillRestart", socket_onNodeWillRestart);
+  socket.on("setSelfRoles", socket_onSetSelfRoles);
+  socket.on("setStyleProperties", socket_onSetStyleProperties);
+
+  socket.on("chatterAdded", socket_onChatterAdded);
+  socket.on("chatterRemoved", socket_onChatterRemoved);
+  socket.on("chat", socket_onChat);
+  socket.on("chatRateLimited", socket_onChatRateLimited);
+  socket.on("chatCrowded", socket_onChatCrowded);
+  socket.on("userBanned", socket_onUserBanned);
+
+  $show(sidebarToggleButton);
+}
+
+function socket_onConnect() {
+  grecaptcha.ready(function () {
+    grecaptcha.execute('6LdzYGslAAAAACxOZaQA5J0CxlfdJQUdWvJYoAFM', { action: 'joinRoom' }).then(function (token) {
+      const joinData = {
+        roomCode,
+        userToken,
+        nickname: settings.nickname,
+        auth: settings.auth,
+        picture: settings.picture,
+        isUsernameHidden: settings.isUsernameHidden,
+        language: navigator.language,
+        token,
+      };
+
+      socket.emit("joinRoom", joinData, socket_joinRoomCallback);
+    });
+  });
+}
+
+function socket_joinRoomCallback(data) {
+  console.log("Joined room successfully.");
+
+  roomEntry = data.roomEntry;
+
+  selfPeerId = data.selfPeerId;
+  socket_onSetSelfRoles(data.selfRoles);
+  loadGame(roomEntry.gameId);
+
+  updateRoomPrivacy();
+  updateChatMode();
+
+  $(".playerCount").textContent = roomEntry.playerCount;
+
+  $(".info .room .roomName").textContent = roomEntry.name;
+  $(".info .room").title = roomEntry.name;
+}
+
+// Start
+if (isLargeScreen()) toggleSidebar(true);
+
+loadText("/room/text", navigator.language, () => {
+  $setTooltip(roomUrlElt, getText("Copy room link", "copyRoomLink"));
+
+  if (hasGuestNickname()) {
+    $hide(".page:not([hidden])");
+    $show(".setNickname.page");
+
+    nicknameField.value = settings.nickname;
+    nicknameField.select();
+    nicknameField.focus();
+    return;
+  }
+
+  postApiJoinRoom();
+});

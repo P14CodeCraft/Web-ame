@@ -1,0 +1,21 @@
+.rules {
+  background: #161515;
+  color: #aaa;
+  text-align: left;
+  font-size: smaller;
+
+  overflow-y: auto;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
+}
+
+.rules .tutorial {
+  padding: 1em;
+  background: #262525;
+}
+
+.rules .tutorial header {
+  font-weight: bold;
+  color: #eee;
+  text-transform: uppercase;
+  margin-bottom: 1em;
+}

@@ -1,0 +1,585 @@
+"use strict";
+
+// Text
+let hasLoadedText = false;
+
+loadText("/games/popsauce/text", navigator.language, () => {
+  hasLoadedText = true;
+
+  if (milestone != null) {
+    $hide(".loading");
+    $show(".main");
+  }
+});
+
+// Audio
+jklmAudio.load({
+  "start": "/games/popsauce/sounds/gulp.wav",
+  "newChallenge": "/games/popsauce/sounds/toaster.wav",
+  "failGuess": "/games/popsauce/sounds/failGuess.wav",
+  "correctGuess": "/games/popsauce/sounds/pop.wav",
+  "playerFoundSource": "/games/popsauce/sounds/pop.wav",
+});
+
+// Setup and milestone
+let serverToLocalNow = 0;
+let constants;
+let milestone = { name: "none" };
+let publicTags = [];
+let filteredQuoteCount = 0;
+let totalQuoteCount = 0;
+let selfPeerId;
+let selfRoles = [];
+let leaderPeerId;
+let players;
+let playersByPeerId = {};
+
+socket.on("setup", socket_onSetup);
+socket.on("setMilestone", socket_onSetMilestone);
+
+function socket_onSetup(data) {
+  constants = data.constants;
+  if (hasLoadedText) {
+    $hide(".loading.page");
+    $show(".main.page");
+  }
+
+  // Rules
+  rules = data.rules;
+  publicTags = data.publicTags;
+  filteredQuoteCount = data.filteredQuoteCount;
+  totalQuoteCount = data.totalQuoteCount;
+
+  for (const item of rules.dictionaryId.items) $make("option", dictionaryIdRuleSelect, { textContent: getText(item.label, `dictionaries.${item.value}.name`), value: item.value });
+  dictionaryIdRuleSelect.value = rules.dictionaryId.value;
+  renderQuickRules();
+
+  $setRangeField(scoreGoalRuleField, rules.scoreGoal);
+  scoringRuleSelect.value = rules.scoring.value;
+  $setRangeField(challengeDurationRuleField, rules.challengeDuration);
+  shorthandsRadioButtons[rules.shorthands.value ? 0 : 1].checked = true;
+  visibleGuessesRadioButtons[rules.visibleGuesses.value ? 0 : 1].checked = true;
+  renderRuleTagOpsList();
+  const canEditRules = data.leaderPeerId === data.selfPeerId || selfRoles.includes("staff");
+  if (data.milestone.rulesLocked === false && canEditRules) showRules = true;
+
+  // Players
+  selfPeerId = data.selfPeerId;
+  leaderPeerId = data.leaderPeerId;
+  selfRoles = data.selfRoles;
+  players = data.players;
+  for (const player of players) {
+    playersByPeerId[player.profile.peerId] = player;
+    player.image = new Image();
+    if (player.profile.picture != null) player.image.src = `data:image/jpeg;base64,${player.profile.picture}`;
+  }
+
+  // Milestone
+  socket_onSetMilestone(data.milestone, data.serverNow);
+}
+
+function socket_onSetMilestone(newMilestone, serverNow) {
+  serverToLocalNow = Date.now() - serverNow;
+
+  if (milestone.name !== newMilestone.name) {
+    if (milestone.name === "round") round_exit();
+    milestone = newMilestone;
+    if (milestone.name === "round") round_enter();
+  } else {
+    milestone = newMilestone;
+  }
+
+  applyRulesVisibility();
+  renderScoreboard();
+
+  const isRoundInProgress = milestone.name === "round";
+  $show(".top", !isRoundInProgress);
+  $show(".middle .content .seating", !isRoundInProgress);
+  $show(".middle .content .round", isRoundInProgress);
+
+  renderBottom();
+
+  if (milestone.name === "seating") {
+    renderSeatingStatus();
+
+    $show(".middle .seating .logo", milestone.lastRound == null);
+    $show(".middle .seating .lastRound", milestone.lastRound != null);
+
+    if (milestone.lastRound != null) {
+      const { winner } = milestone.lastRound;
+      $(".middle .seating .lastRound .winnerPicture img").src = winner.picture == null ? "/images/auth/guest.png" : `data:image/jpeg;base64,${winner.picture}`;
+      $(".middle .seating .lastRound .winnerNickname").textContent = winner.nickname;
+    }
+  }
+}
+
+function renderBottom() {
+  const isRoundInProgress = milestone.name === "round";
+  const joined = playersByPeerId[selfPeerId] != null;
+  const hasFoundSource = milestone.name === "round" && joined && milestone.playerStatesByPeerId[selfPeerId].hasFoundSource;
+
+  $show(".bottom .join", !joined);
+  $show(".bottom .joined", joined);
+  $show(".bottom .joined .seating", joined && !isRoundInProgress);
+  $show(".bottom .joined .leaveRound", joined && !isRoundInProgress);
+
+  $show(".bottom .joined .round.guessing", isRoundInProgress && milestone.challenge != null && !hasFoundSource);
+  $show(".bottom .joined .round.doneGuessing", isRoundInProgress && (milestone.challenge == null || hasFoundSource));
+
+  $(".bottom .joined .round.doneGuessing").textContent = hasFoundSource ? getText("You guessed it!", "youGuessedIt") : getText("You didn't guess it.", "youDidntGuessIt");
+}
+
+function renderScoreboard() {
+  const scoreboards = $$(".scoreboard");
+
+  for (const scoreboard of scoreboards) {
+    $show(scoreboard, players.length !== 0);
+    scoreboard.innerHTML = "";
+    const scoreboardEntries = players.map(player => ({ player }));
+
+    if (milestone.name === "round") {
+      for (const entry of scoreboardEntries) entry.state = milestone.playerStatesByPeerId[entry.player.profile.peerId];
+      scoreboardEntries.sort((a, b) => b.state.points - a.state.points);
+    }
+
+    for (const entry of scoreboardEntries) {
+      const entryDiv = $make("div", scoreboard, { className: "entry", title: entry.player.profile.nickname });
+      entryDiv.classList.toggle("isOnline", entry.player.isOnline);
+      if (entry.state != null) entryDiv.classList.toggle("hasFoundSource", entry.state.hasFoundSource);
+
+      const pictureSrc = entry.player.profile.picture == null ? "/images/auth/guest.png" : `data:image/jpeg;base64,${entry.player.profile.picture}`;
+
+      const img = $make("img", entryDiv, { className: "picture", src: pictureSrc });
+      const scoreDiv = $make("div", entryDiv, { className: "score" });
+      const scoreSpan = $make("span", scoreDiv, { textContent: entry.state != null ? entry.state.points : 0 });
+      const textDiv = $make("div", entryDiv, { className: "text" });
+      const nicknameDiv = $make("div", textDiv, { className: "nickname", textContent: entry.player.profile.nickname });
+      const guessDiv = $make("div", textDiv, { className: "guess", textContent: entry.state != null ? entry.state.guess : "" });
+    }
+  }
+}
+
+// Rules
+let rules;
+
+let showRules = false;
+const toggleRulesButton = $(".quickRules button.toggleRules");
+
+toggleRulesButton.addEventListener("click", toggleRules_onClick);
+
+function toggleRules_onClick(event) {
+  showRules = !showRules;
+  applyRulesVisibility();
+  const canEditRules = leaderPeerId === selfPeerId || selfRoles.includes("staff");
+
+  if (canEditRules && milestone.name === "seating") socket.emit("setRulesLocked", !showRules);
+}
+
+function applyRulesVisibility() {
+  const canEditRules = (leaderPeerId === selfPeerId || selfRoles.includes("staff")) && milestone.name === "seating";
+  $(".middle .rules fieldset").disabled = !canEditRules;
+  $show(".middle .rules", showRules);
+
+  $show(".quickRules .summary", !showRules);
+  toggleRulesButton.textContent = showRules ? getText("Close rules", "closeRules") : (canEditRules ? getText("Edit rules", "editRules") : getText("Show rules", "showRules"));
+}
+
+const dictionaryIdRuleSelect = $(".rules .dictionaryId.rule select");
+const scoreGoalRuleField = { number: $(".rules .scoreGoal.rule input[type=number]"), range: $(".rules .scoreGoal.rule input[type=range]") };
+const scoringRuleSelect = $(".rules .scoring.rule select");
+const challengeDurationRuleField = { number: $(".rules .challengeDuration.rule input[type=number]"), range: $(".rules .challengeDuration.rule input[type=range]") };
+const shorthandsRadioButtons = $$(".rules .shorthands.rule input[type=radio]");
+const visibleGuessesRadioButtons = $$(".rules .visibleGuesses.rule input[type=radio]");
+
+dictionaryIdRuleSelect.addEventListener("change", dictionaryIdRule_onChange);
+$bindRangeField(scoreGoalRuleField, () => socket.emit("setRules", { scoreGoal: parseInt(scoreGoalRuleField.number.value, 10) }));
+scoringRuleSelect.addEventListener("change", scoringRule_onChange);
+$bindRangeField(challengeDurationRuleField, () => socket.emit("setRules", { challengeDuration: parseInt(challengeDurationRuleField.number.value, 10) }));
+shorthandsRadioButtons.forEach(x => x.addEventListener("click", shorthandsRadioButton_onClick));
+visibleGuessesRadioButtons.forEach(x => x.addEventListener("click", visibleGuessesRadioButton_onClick));
+
+$(".rules .tags.rule .list").addEventListener("click", onTagsRuleListClick);
+$(".rules .tags.rule .addUnion").addEventListener("click", onAddUnionTagOpClick);
+$(".rules .tags.rule .addIntersection").addEventListener("click", onAddIntersectionTagOpClick);
+$(".rules .tags.rule .addDifference").addEventListener("click", onAddDifferenceTagOpClick);
+
+function dictionaryIdRule_onChange(event) {
+  socket.emit("setRules", { dictionaryId: dictionaryIdRuleSelect.value });
+}
+
+function scoringRule_onChange(event) {
+  socket.emit("setRules", { scoring: scoringRuleSelect.value });
+}
+
+function shorthandsRadioButton_onClick(event) {
+  socket.emit("setRules", { shorthands: shorthandsRadioButtons[0].checked });
+}
+
+function visibleGuessesRadioButton_onClick(event) {
+  socket.emit("setRules", { visibleGuesses: visibleGuessesRadioButtons[0].checked });
+}
+
+function renderQuickRules() {
+  const dictionaryId = rules.dictionaryId.value;
+  $(".quickRules .summary .dictionary").textContent = rules.dictionaryId.items.find(x => x.value === dictionaryId).label;
+  $(".quickRules .summary .scoreGoal").textContent = rules.scoreGoal.value;
+}
+
+function onTagsRuleListClick(event) {
+  if (event.target.tagName !== "BUTTON") return;
+  event.preventDefault();
+
+  const itemDiv = event.target.parentElement.parentElement;
+
+  const tagOps = rules.tagOps.value.slice(0);
+  const opIndex = Array.from(itemDiv.parentElement.children).indexOf(itemDiv);
+  tagOps.splice(opIndex, 1);
+
+  socket.emit("setTagOps", tagOps);
+}
+
+function onAddUnionTagOpClick(event) {
+  event.preventDefault();
+  addTagOp("union");
+}
+
+function onAddIntersectionTagOpClick(event) {
+  event.preventDefault();
+  addTagOp("intersection");
+}
+
+function onAddDifferenceTagOpClick(event) {
+  event.preventDefault();
+  addTagOp("difference");
+}
+
+function addTagOp(op) {
+  const tagInput = $(".rules .tags .insert input[type=text]");
+
+  const tagOps = rules.tagOps.value.slice(0);
+  if (tagOps.length >= 20) return alert("Too many filters.");
+
+  tagOps.push({ op, tag: tagInput.value });
+  socket.emit("setTagOps", tagOps);
+
+  tagInput.value = "";
+}
+
+function renderRuleTagOpsList() {
+  $(".rules .tags .filteredQuoteCount").textContent = filteredQuoteCount;
+  $(".rules .tags .totalQuoteCount").textContent = totalQuoteCount;
+  const tagsList = $(".rules .tags .list");
+  tagsList.innerHTML = "";
+
+  for (const { op, tag } of rules.tagOps.value) {
+
+    let symbol = "?";
+    let title = "";
+
+    switch (op) {
+      case "union": symbol = "∪"; title = getText("Union (include challenges with this tag)", "filterUnion"); break;
+      case "intersection": symbol = "∩"; title = getText("Intersection (only challenges with this tag)", "filterIntersection"); break;
+      case "difference": symbol = "∖"; title = getText("Difference (exclude challenges with this tag)", "filterDifference"); break;
+    }
+
+    const itemDiv = $make("div", tagsList, { className: "item " + op, dataset: { tag }, title });
+    $make("div", itemDiv, { className: "op", textContent: symbol });
+    $make("div", itemDiv, { className: "tag", textContent: tag });
+    const actionsDiv = $make("div", itemDiv, { className: "actions" });
+    const removeButton = $make("button", actionsDiv, { className: "remove", textContent: "✖" });
+  }
+
+  if (rules.tagOps.value.length === 0) {
+    $make("div", tagsList, { textContent: `No filters.` });
+  }
+
+  const tagsDataList = $(".rules .tags .insert datalist#quoteTags");
+  tagsDataList.innerHTML = "";
+
+  for (const tag of publicTags) $make("option", tagsDataList, { textContent: tag });
+}
+
+socket.on("setRulesLocked", socket_onSetRulesLocked);
+socket.on("setRules", socket_onSetRules);
+socket.on("setDictionary", socket_onSetDictionary);
+
+function socket_onSetRulesLocked(locked) {
+  milestone.rulesLocked = locked;
+  renderSeatingStatus();
+}
+
+function socket_onSetRules(data) {
+  let mustRenderTagOpsList = false;
+
+  for (const [ruleName, value] of Object.entries(data)) {
+    rules[ruleName].value = value;
+
+    switch (ruleName) {
+      case "dictionaryId":
+        console.warn("dictionaryId was updated through setRules, this should not happen!");
+        break;
+      case "tagOps":
+        mustRenderTagOpsList = true;
+        break;
+      case "scoreGoal": $setRangeField(scoreGoalRuleField, { value }); renderQuickRules(); break;
+      case "challengeDuration": $setRangeField(challengeDurationRuleField, { value }); break;
+      case "scoring": scoringRuleSelect.value = value; break;
+      case "shorthands": shorthandsRadioButtons[value ? 0 : 1].checked = true; break;
+      case "visibleGuesses": visibleGuessesRadioButtons[value ? 0 : 1].checked = true; break;
+    }
+  }
+
+  if (mustRenderTagOpsList) renderRuleTagOpsList();
+}
+
+function socket_onSetDictionary({ dictionaryId, publicTags: newPublicTags, tagOps, filteredQuoteCount: newFilteredQuoteCount, totalQuoteCount: newTotalQuoteCount }) {
+  rules.dictionaryId.value = dictionaryId;
+  dictionaryIdRuleSelect.value = dictionaryId;
+  renderQuickRules();
+
+  if (newPublicTags != null) publicTags = newPublicTags;
+
+  filteredQuoteCount = newFilteredQuoteCount;
+  totalQuoteCount = newTotalQuoteCount;
+  rules.tagOps.value = tagOps;
+
+  renderRuleTagOpsList();
+}
+
+// Players
+
+socket.on("addPlayer", socket_onAddPlayer);
+socket.on("updatePlayer", socket_onUpdatePlayer);
+socket.on("removePlayer", socket_onRemovePlayer);
+socket.on("setLeaderPeer", socket_onSetLeaderPeer);
+
+function socket_onAddPlayer(player) {
+  players.push(player);
+  playersByPeerId[player.profile.peerId] = player;
+
+  if (milestone.name === "round") milestone.playerStatesByPeerId[player.profile.peerId] = { guess: "", hasFoundSource: false, points: 0 };
+  else if (milestone.name === "seating") renderSeatingStatus();
+
+  if (player.profile.peerId === selfPeerId) renderBottom();
+  renderScoreboard();
+}
+
+function socket_onUpdatePlayer(playerPeerId, profile, isOnline) {
+  const player = playersByPeerId[playerPeerId];
+  player.profile = profile;
+  player.isOnline = isOnline;
+  renderScoreboard();
+}
+
+function socket_onRemovePlayer(playerPeerId) {
+  const player = playersByPeerId[playerPeerId];
+  players.splice(players.indexOf(player), 1);
+  delete playersByPeerId[playerPeerId];
+
+  if (milestone.name === "seating") renderSeatingStatus();
+  renderBottom();
+  renderScoreboard();
+}
+
+function socket_onSetLeaderPeer(peerId) {
+  leaderPeerId = peerId;
+  if (leaderPeerId === selfPeerId) socket.emit("setRulesLocked", !showRules);
+  if (milestone.name === "seating") renderSeatingStatus();
+}
+
+// Seating
+$(".top .startRoundNow a").addEventListener("click", (event) => socket.emit("startRoundNow"));
+$("button.joinRound").addEventListener("click", (event) => { event.preventDefault(); socket.emit("joinRound"); });
+$("button.leaveRound").addEventListener("click", (event) => { event.preventDefault(); socket.emit("leaveRound"); });
+
+socket.on("setStartTime", socket_onSetStartTime);
+
+function socket_onSetStartTime(startTime, serverNow) {
+  serverToLocalNow = Date.now() - serverNow;
+  milestone.startTime = startTime;
+  renderSeatingStatus();
+}
+
+function renderSeatingStatus() {
+  const statusElt = $(".top .status");
+  const isLeaderOrStaff = leaderPeerId === selfPeerId || selfRoles.includes("staff");
+
+  if (milestone.startTime != null) {
+    const seconds = jklmMath.secondsLeft(milestone.startTime + serverToLocalNow);
+    statusElt.textContent = getText(`⏱️ Round will start in {seconds}s!`, "roundWillStartIn", { seconds });
+    setTimeout(renderSeatingStatus, 500);
+  } else {
+    if (milestone.rulesLocked) {
+      if (filteredQuoteCount === 0) {
+        statusElt.textContent = getText(`❌ No challenge found for the selected rules!`, "noMatchingQuotes");
+      } else {
+        const missingPlayers = Math.max(0, constants.minPlayers - players.length);
+        statusElt.textContent = getText(`⏳ Waiting for {missingPlayers} more players…`, "waitingForMorePlayers", { missingPlayers });
+      }
+    }
+    else statusElt.textContent = isLeaderOrStaff ? getText(`📋 Close the rules to start the game…`, "closeRulesToStartGame") : getText(`📋 Party leader is editing the rules…`, "partyLeaderIsEditingRules");
+  }
+
+  $show(".top .startRoundNow", isLeaderOrStaff && milestone.startTime != null);
+}
+
+// Round
+let challengeImageUrl;
+let challengeTimerInterval;
+
+const guessForm = $(".bottom .joined form.round");
+const guessInput = $(".bottom .joined form.round input");
+
+guessForm.addEventListener("submit", guessForm_onSubmit);
+
+function guessForm_onSubmit(event) {
+  event.preventDefault();
+  const guess = guessInput.value.trim();
+  guessInput.value = "";
+  if (guess.length > 0) socket.emit("submitGuess", guess);
+}
+
+function clearAndFocusGuessInput() {
+  guessInput.value = "";
+
+  const joined = playersByPeerId[selfPeerId] != null;
+  if (!joined) return;
+
+  if (!document.hasFocus()) parentWindow.postMessage({ name: "focusGameWindow" }, "*");
+  guessInput.focus();
+}
+
+function focusChat() {
+  if (document.hasFocus()) parentWindow.postMessage({ name: "focusChat" }, "*");
+}
+
+socket.on("setPlayerState", socket_onSetPlayerState);
+socket.on("startChallenge", socket_onStartChallenge);
+socket.on("endChallenge", socket_onEndChallenge);
+
+function socket_onSetPlayerState(playerPeerId, playerState) {
+  milestone.playerStatesByPeerId[playerPeerId] = playerState;
+
+  if (playerPeerId === selfPeerId) {
+    jklmAudio.play(playerState.hasFoundSource ? "correctGuess" : "failGuess");
+    renderBottom();
+
+    if (playerState.hasFoundSource) focusChat();
+  } else if (playerState.hasFoundSource) jklmAudio.play("playerFoundSource");
+
+  renderScoreboard();
+}
+
+function socket_onStartChallenge(challenge, serverNow) {
+  serverToLocalNow = Date.now() - serverNow;
+  milestone.challenge = challenge;
+
+  for (const playerState of Object.values(milestone.playerStatesByPeerId)) {
+    playerState.hasFoundSource = false;
+    playerState.guess = "";
+  }
+
+  renderScoreboard();
+  renderBottom();
+
+  startChallengeTimerInterval();
+  renderChallenge();
+
+  clearAndFocusGuessInput();
+}
+
+function socket_onEndChallenge(challengeResult) {
+  milestone.challenge = null;
+  milestone.challengeResult = challengeResult;
+
+  for (const [playerPeerId, guess] of Object.entries(challengeResult.foundSourcesByPlayerPeerId)) {
+    milestone.playerStatesByPeerId[playerPeerId].guess = guess;
+  }
+
+  stopChallengeTimerInterval();
+  renderScoreboard();
+  renderBottom();
+  renderChallenge();
+
+  focusChat();
+}
+
+function round_enter() {
+  jklmAudio.play("start");
+
+  if (milestone.challenge != null) startChallengeTimerInterval();
+  renderChallenge();
+  clearAndFocusGuessInput();
+}
+
+function round_exit() {
+  revokeChallengeImageUrl();
+  stopChallengeTimerInterval();
+
+  // Clear players when going back to seating
+  players.length = 0;
+  playersByPeerId = {};
+
+  if (leaderPeerId === selfPeerId || selfRoles.includes("staff")) socket.emit("setRulesLocked", !showRules);
+
+  focusChat();
+}
+
+function renderChallenge() {
+  $show(".round .loading", milestone.challenge == null && milestone.challengeResult == null);
+  $show(".round .challenge", milestone.challenge != null);
+  $show(".round .challengeResult", milestone.challenge == null && milestone.challengeResult != null);
+
+  if (milestone.challenge != null) {
+    $(".challenge .prompt").textContent = milestone.challenge.prompt;
+
+    revokeChallengeImageUrl();
+
+    if (milestone.challenge.image != null) {
+      const blob = new Blob([milestone.challenge.image.data], { type: milestone.challenge.image.type });
+      challengeImageUrl = URL.createObjectURL(blob);
+      $(".challenge .image .actual").style.backgroundImage = `url(${challengeImageUrl})`;
+    } else {
+      $(".challenge .text").innerHTML = jklmUtils.markdownToHtml(milestone.challenge.text);
+    }
+
+    $show(".challenge .textScroll", milestone.challenge.text != null);
+    $show(".challenge .image", milestone.challenge.image != null);
+  } else {
+    if (milestone.challengeResult != null) {
+      $(".round .challengeResult .source .value").textContent = milestone.challengeResult.source;
+      $(".round .challengeResult .details").innerHTML = jklmUtils.markdownToHtml(milestone.challengeResult.details);
+      $(".round .challengeResult .fastest").textContent = milestone.challengeResult.fastest != null ? getText(`{fastest} found it first.`, "foundItFirst", { fastest: milestone.challengeResult.fastest }) : getText("Nobody found it.", "nobodyFoundIt");
+      $(".round .challengeResult .submitter").textContent = milestone.challengeResult.submitter != null ? getText(`Submitted by {submitter}.`, "submittedBy", { submitter: milestone.challengeResult.submitter }) : "";
+      let imageCredits = milestone.challengeResult.imageCredits;
+      if (imageCredits == null) imageCredits = "";
+      $(".round .challengeResult .imageCredits").innerHTML = jklmUtils.markdownToHtml(imageCredits);
+    }
+  }
+}
+
+function revokeChallengeImageUrl() {
+  if (challengeImageUrl != null) {
+    URL.revokeObjectURL(challengeImageUrl);
+    challengeImageUrl = null;
+  }
+}
+
+function startChallengeTimerInterval() {
+  if (challengeTimerInterval == null) {
+    challengeTimerInterval = setInterval(updateChallengeTimer, 500);
+    updateChallengeTimer();
+  }
+}
+
+function updateChallengeTimer() {
+  const seconds = jklmMath.secondsLeft(milestone.challenge.endTime + serverToLocalNow);
+  $(".challenge .timer").textContent = getText(`{seconds}s left`, "secondsLeft", { seconds });
+}
+
+function stopChallengeTimerInterval() {
+  if (challengeTimerInterval != null) {
+    clearInterval(challengeTimerInterval);
+    challengeTimerInterval = null;
+  }
+}

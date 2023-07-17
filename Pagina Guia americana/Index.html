@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/Index.css">
+    <!-- Fuentes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300&family=Roboto+Slab&family=Saira+Extra   +Condensed:wght@200&display=swap" rel="stylesheet">
+    <!-- Titulo  -->
+    <title>Document</title>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark fixed-top">
+        <div class="container-fluid ">
+          <a class="navbar-brand" href="#">Ing sistema</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+            <div class="offcanvas-header">
+              <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Menu</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+              <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Herramientas</a>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Guias/Materias
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-item" href="#">Programacion 1</a></li>
+                    <li><a class="dropdown-item" href="#">Sistemas operativos</a></li>
+                    <li>
+                      <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="#">Matematica </a></li>
+                    <li><a class="dropdown-item" href="#">Razonamiento</a></li>
+                  </ul>
+                </li>
+              </ul>
+              <!-- buscador -->
+              <!-- <form class="d-flex mt-3" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-success" type="submit">Search</button>
+              </form> -->
+            </div>
+          </div>
+        </div>
+    </nav>  
+    <section class="hero align-items-stretch">
+        <div class="container contenedor1">
+           <div class="hero-principal d-flex flex-column justify-content-center aling-item-center">
+                <div class="row fila1">
+                    <div class="col-lg-6 columna2">   
+                         <img class="hero-imagen-sm img-fluid justify-cibtent-center" src="img/student-svgrepo-com.svg" alt="Imagen principal">
+                    </div>
+                    <div class="col-lg-6 columna3">
+                      <div class="row Col3fila1-sm">
+                        <h1 class="Titulo">Guía Integral para Estudiantes de Primer Semestre en la Universidad Americana</h1>
+                      </div>
+                      <div class="row col3fila2">
+                        <div class="row col3fila2-fila1">
+                          <button class="btn btn-custom btn-primary boton-col3fila2-fila1" type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop" aria-controls="staticBackdrop">
+                            Informacion
+                          </button>
+                          <div class="offcanvas offcanvas-start" data-bs-backdrop="static" tabindex="-1" id="staticBackdrop" aria-labelledby="staticBackdropLabel">
+                            <div class="offcanvas-header">
+                              <h5 class="offcanvas-title" id="staticBackdropLabel">Informacion</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                            </div>
+                            <div class="offcanvas-body">
+                              <div>
+                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quas dignissimos necessitatibus alias beatae ipsum aspernatur rem, et non sequi? Aperiam facere nihil alias sequi iure labore consectetur quam, quia illo!
+                              </div>
+                            </div>
+                           </div>
+                        </div>
+                        <div class="row col3fila2-fila2">
+                          <button type="button" class="btn btn-secondary btn-m boton-col3fila2-fila2">
+                            <a href="sobreN.html" class="sinsub">Sobre nosotros</a>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+           </div>
+        </div>
+        <div class="container contenedor2">
+          <div class="row">
+            <div class="col-12">
+              
+            </div>
+          </div>
+        </div>
+    </section>
+    <footer class="bg-dark text-light py-3">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Información de contacto</h5>
+            <p>Correo electrónico: info@example.com</p>
+            <p>Teléfono: +1 123 456 7890</p>
+            <p>Dirección: 123 Calle Principal, Ciudad</p>
+          </div>
+          <div class="col-md-6">
+            <h5>Enlaces útiles</h5>
+            <ul class="list-unstyled">
+              <li><a href="#">Acerca de nosotros</a></li>
+              <li><a href="#">Términos y condiciones</a></li>
+              <li><a href="#">Política de privacidad</a></li>
+              <li><a href="#">Preguntas frecuentes</a></li>
+            </ul>
+          </div>
+        </div>
+        <hr>
+        <p class="text-center">© 2023 Ejemplo de Footer. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+    
+    
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+</body>
+</html>

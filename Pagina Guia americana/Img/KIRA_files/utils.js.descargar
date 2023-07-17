@@ -1,0 +1,68 @@
+"use strict";
+const htmlEscapes = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  "'": "&#39;",
+  "\"": "&quot;"
+}
+
+const jklmUtils = {
+  deepClone: function (value) {
+    if (value === null) return null;
+    if (value === undefined) return undefined;
+    if (typeof value === "string") return value;
+    if (typeof value === "number") return value;
+    if (typeof value === "boolean") return value;
+
+    if (Array.isArray(value)) {
+      const res = [];
+      for (const item of value) res.push(jklmUtils.deepClone(item));
+      return res;
+    }
+
+    if (typeof value === "object") {
+      const res = {};
+      for (const entry of Object.entries(value)) res[entry[0]] = jklmUtils.deepClone(entry[1]);
+      return res;
+    }
+
+    const err = new Error(`Don't know how to clone value of type ${typeof (value)}.`);
+    throw err;
+  },
+
+  sortedIndexOf: function (array, value) {
+    let low = 0;
+    let high = array.length;
+
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (array[middle] < value) low = middle + 1;
+      else high = middle;
+    }
+
+    return high < array.length && array[high] === value ? high : -1;
+  },
+
+  sample: (array) => array[Math.floor(Math.random() * array.length)],
+
+  escapeHtml: (value) => value.replace(/[&<>'"]/g, (char) => htmlEscapes[char]),
+
+  markdownToHtml: (markdownText) => {
+    let htmlText = jklmUtils.escapeHtml(markdownText);
+
+    function applyRegex(regex, callback) {
+      const matches = htmlText.match(regex);
+      if (matches === null) return;
+      for (const match of matches) htmlText = htmlText.replace(match, callback(match));
+    }
+
+    applyRegex(/\*\*.*?\*\*/g, (match) => `<b>${match.slice(2, -2)}</b>`);
+    applyRegex(/\_\_.*?\_\_/g, (match) => `<u>${match.slice(2, -2)}</u>`);
+    applyRegex(/\*.*?\*/g, (match) => `<i>${match.slice(1, -1)}</i>`);
+    applyRegex(/\_.*?\_/g, (match) => `<i>${match.slice(1, -1)}</i>`);
+    return htmlText;
+  },
+};
+
+if (typeof module === "object" && module.exports) module.exports = jklmUtils;

@@ -1,0 +1,599 @@
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-flow: column;
+}
+
+.top {
+  display: flex;
+  align-items: stretch;
+  background: #7855c7;
+  color: #eee;
+}
+
+.grecaptcha-badge {
+  display: none;
+}
+
+.top .info {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.top .info.privateRoom .roomCode {
+  filter: blur(0.2em);
+}
+
+.top .info>span {
+  padding: 0.4em 0em;
+}
+
+.toCopy {
+  cursor: copy;
+}
+
+.top .info .url {
+  padding: 0.4em 0.5em;
+  background: rgba(255, 255, 255, 0.1);
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.top .info .url:active {
+  background: rgba(32, 32, 32, 0.5);
+}
+
+.top .info .url .icon {
+  margin-left: 0.5em;
+  opacity: 0.5;
+}
+
+.top .info .room {
+  margin: 0 0.5em;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.top .info .playerCount {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.125em 0.5em;
+  border-radius: 1em;
+  font-size: smaller;
+}
+
+.top .info .roomName {
+  opacity: 0.5;
+}
+
+.top .spacer {
+  flex: 1;
+}
+
+.top button,
+.top button:hover,
+.top button:focus,
+.top button:active {
+  padding: 0.4em 0.6em;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.top button:active {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.top button.toggleMute {
+  background: transparent !important;
+}
+
+.top button:hover.toggleMute {
+  background: transparent !important;
+}
+
+.top .volume {
+  display: none;
+  align-items: center;
+  margin-right: 0.5em;
+  user-select: none;
+}
+
+.top .volume input {
+  width: 100px;
+}
+
+.top .volume input[type='range'] {
+  background: transparent;
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.top .volume input[type='range']::-webkit-slider-runnable-track {
+  background: rgba(0, 0, 0, 0.3);
+  height: 0.5em;
+  border-radius: 1em;
+}
+
+.top .volume input[type='range']::-moz-range-track {
+  background: rgba(0, 0, 0, 0.3);
+  height: 0.5em;
+  border-radius: 1em;
+}
+
+.top .volume input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  background: #957ad1;
+  margin-top: -0.25em;
+  width: 1em;
+  height: 1em;
+  border: 1px solid #442c78;
+  border-radius: 1em;
+}
+
+.top .volume input[type='range']::-moz-range-thumb {
+  -webkit-appearance: none;
+  background: #957ad1;
+  margin-top: -0.25em;
+  width: 1em;
+  height: 1em;
+  border: 1px solid #442c78;
+  border-radius: 1em;
+}
+
+.top .mainBadge {
+  padding: 0.4em 0.6em;
+  cursor: help;
+}
+
+.top .sidebarToggle {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.top .sidebarToggle.unread {
+  position: relative;
+}
+
+.top .sidebarToggle.unread:after {
+  position: absolute;
+  content: ' ';
+  left: 8px;
+  bottom: 8px;
+  width: 8px;
+  height: 8px;
+  background: #f66;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.8);
+}
+
+.pages {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.pages>div {
+  flex: 1;
+}
+
+.setNickname.page {
+  background: #dddde3;
+  padding: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.setNickname.page .line {
+  margin-top: 0.5em;
+}
+
+.setNickname.page .nickname {
+  margin-right: 0.5em;
+}
+
+.main.page {
+  position: relative;
+}
+
+.main.page .game {
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 240px;
+  background: #202020;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-flow: column;
+}
+
+.sidebar .tabs {
+  display: flex;
+  font-size: smaller;
+}
+
+.sidebar .tabs a {
+  flex: 1;
+  display: block;
+  padding: 0.5em;
+  background: #404040;
+  text-decoration: none;
+  color: #aaa;
+  text-align: center;
+}
+
+.sidebar .tabs a:not(:last-of-type) {
+  border-right: 1px solid #333;
+}
+
+.sidebar .tabs a:hover {
+  background: #464646;
+}
+
+.sidebar .tabs a.active {
+  background: #505050;
+}
+
+.sidebar .tabs a:active {
+  background: #3c3c3c;
+}
+
+.sidebar {
+  overflow: hidden;
+}
+
+.sidebar>.pane>.loading {
+  padding: 0.5em;
+  color: #ccc;
+}
+
+.sidebar>.pane {
+  position: relative;
+}
+
+.sidebar>.pane:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.3) inset;
+  pointer-events: none;
+}
+
+.sidebar>.pane {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.sidebar>.chat .log {
+  flex: 1;
+  color: #ccc;
+  padding: 0.5em;
+  font-size: 0.8em;
+  overflow-y: auto;
+}
+
+.sidebar>.chat .log button.setChatFilter {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: none;
+  border: none;
+  opacity: 0.5;
+}
+
+.sidebar>.chat .log>div {
+  margin-bottom: 0.5em;
+}
+
+.sidebar>.chat .log>div.newMessages {
+  display: flex;
+  align-items: center;
+  color: #f44;
+}
+
+.sidebar>.chat .log>div.newMessages span {
+  padding: 0em 0.5em;
+  text-transform: uppercase;
+}
+
+.sidebar>.chat .log>div.newMessages hr {
+  flex: 1;
+  border: none;
+  height: 0.125em;
+  background: #f44;
+}
+
+.sidebar>.chat .log>div.system {
+  color: #8aa;
+}
+
+.sidebar>.chat .log>div .time {
+  font-size: 0.7em;
+  color: #888;
+}
+
+.sidebar>.chat .log>div .badges {
+  margin-right: 0.25rem;
+}
+
+.sidebar>.chat .log>div .badges>span {
+  cursor: help;
+}
+
+.sidebar>.chat .log>div .author {
+  color: #eee;
+  text-decoration: none;
+}
+
+.sidebar>.chat .log>div .author img.service {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  margin-right: 0.25em;
+  border-radius: 0.125em;
+}
+
+.sidebar>.chat .log>div .broadcast {
+  font-weight: bolder;
+}
+
+.sidebar>.chat .log>div .broadcast .author {
+  color: #ff791d;
+}
+
+.sidebar>.chat .log>div .broadcast::before {
+  content: '[📢] ';
+  color: orange;
+}
+
+.sidebar>.chat .log>div .text {
+  white-space: pre-wrap;
+}
+
+:root {
+  --bot-messages-color: #CCCCCC;
+  --bot-messages-letter-spacing: normal;
+  --bot-messages-font-style: normal;
+  --bot-messages-background-color: transparent;
+  --bot-messages-word-spacing: normal;
+  --bot-messages-text-decoration: auto;
+  --bot-messages-font-weight: normal;
+}
+
+.bot-messages .text {
+  color: var(--bot-messages-color);
+  letter-spacing: var(--bot-messages-letter-spacing);
+  font-style: var(--bot-messages-font-style);
+  background-color: var(--bot-messages-background-color);
+  word-spacing: var(--bot-messages-word-spacing);
+  text-decoration: var(--bot-messages-text-decoration);
+  font-weight: var(--bot-messages-font-weight);
+}
+
+.sidebar>.chat .log>div .text.deleted {
+  color: #808080;
+  font-style: italic;
+}
+
+.sidebar>.chat .input {
+  display: flex;
+  height: 3em;
+}
+
+.sidebar>.chat .input textarea {
+  flex: 1;
+  border: none;
+  resize: none;
+  background: rgba(0, 0, 0, 0.4);
+  outline: none;
+  color: #aaa;
+  padding: 0.5em;
+  line-height: 1.25;
+  font-size: smaller;
+}
+
+.sidebar>.chat .input textarea::placeholder {
+  color: #666;
+}
+
+.sidebar>.chat .input textarea.rateLimited::placeholder {
+  color: #ff5a5a;
+}
+
+.sidebar>.room .darkSettings .setting .label {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar>.room .people {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  overflow: hidden;
+}
+
+.sidebar>.room .people .content {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  overflow: hidden;
+}
+
+.sidebar>.room .people .content .filter {
+  display: flex;
+  padding: 0.5em;
+}
+
+.sidebar>.room .people .content .filter input {
+  flex: 1;
+  background: #333;
+  border: none;
+  color: #ccc;
+  outline: none;
+}
+
+.sidebar>.room .people .content .list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar>.room .people .chatter {
+  color: #eee;
+  padding: 0.5em;
+  cursor: pointer;
+  display: flex;
+}
+
+.sidebar>.room .people .chatter:hover {
+  background: #303030;
+}
+
+.sidebar>.room .people .chatter .main {
+  flex: 1;
+}
+
+.sidebar>.room .people .chatter .badges {
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar>.room .people .chatter .badges>div {
+  padding: 0.5em 0;
+  cursor: help;
+}
+
+.sidebar>.room .people .chatter.banned .nickname {
+  text-decoration: line-through;
+}
+
+.sidebar>.room .people .chatter .auth {
+  font-size: smaller;
+  color: #888;
+}
+
+.sidebar>.room .people .chatter .picture {
+  width: 42px;
+  height: 42px;
+  margin-right: 0.5em;
+}
+
+.sidebar>.userProfile .content {
+  color: #ccc;
+  padding: 1em;
+  text-align: center;
+}
+
+.sidebar>.userProfile .picture {
+  margin-bottom: 0.5em;
+}
+
+.sidebar>.userProfile .nickname {
+  margin-bottom: 0.5em;
+}
+
+.sidebar>.userProfile .auth {
+  font-size: smaller;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+.sidebar>.userProfile .manage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sidebar>.userProfile .manage button {
+  margin-bottom: 1rem;
+}
+
+.sidebar>.userProfile .manage button:not(:first-child) {
+  margin-left: 0.5em;
+}
+
+.sidebar>.userProfile .badges {
+  margin-bottom: 1rem;
+}
+
+.sidebar>.userProfile .badges>div {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar>.userProfile .ipAddress {
+  font-family: monospace;
+}
+
+.disconnected.page {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+  text-align: center;
+  background: #eee;
+}
+
+.disconnected.page .title {
+  font-size: 2em;
+  font-family: 'Pacifico', sans-serif;
+  color: #aaa;
+  margin-bottom: 0.5em;
+}
+
+.disconnected.page .reason {
+  margin-bottom: 1em;
+}
+
+.disconnected.page .reconnecting {
+  margin-bottom: 1em;
+  font-style: italic;
+  font-size: smaller;
+}
+
+iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 1000px) {
+  .top .volume {
+    display: flex;
+  }
+
+  .main.page {
+    display: flex;
+  }
+
+  .main.page .game {
+    flex: 1;
+  }
+
+  .sidebar {
+    position: initial;
+    width: 300px;
+    box-shadow: none;
+  }
+}

@@ -1,0 +1,20 @@
+"use strict";
+
+const jklmMath = {
+  lerp: (a, b, v) => a + (b - a) * v,
+  lerpAngle: (a, b, v) => jklmMath.wrapAngle(jklmMath.wrapAngle(a) + jklmMath.wrapAngle(b - a) * v),
+  wrapAngle: (a) => (a + Math.PI * 5) % (Math.PI * 2) - Math.PI,
+
+  secondsLeft: (targetTime) => Math.ceil(Math.max(0, targetTime - Date.now()) / 1000),
+  secondsSince: (startTime) => Math.ceil(Math.max(0, Date.now() - startTime) / 1000),
+  formatSeconds: (seconds) =>
+    Math.floor(seconds / 3600).toString().padStart(2, "0") + ":" +
+    (Math.floor(seconds / 60) % 60).toString().padStart(2, "0") + ":" +
+    (seconds % 60).toString().padStart(2, "0"),
+
+  randomInteger: function (lower, upper) {
+    return lower + Math.floor(Math.random() * (upper - lower + 1));
+  }
+};
+
+if (typeof module === "object" && module.exports) module.exports = jklmMath;
